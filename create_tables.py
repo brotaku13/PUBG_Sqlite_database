@@ -47,8 +47,7 @@ def create_tables(game_map: str, game_type: str, conn, curr):
 
         curr.execute(create_team_stats_round)
         conn.commit()
-        
-
+    
         create_player_stats_round = """
         CREATE TABLE {}(
             username TEXT PRIMARY KEY NOT NULL,
@@ -64,7 +63,7 @@ def create_tables(game_map: str, game_type: str, conn, curr):
         conn.commit()
         
     #create total team stats
-    team_total_stats_name = f'{event_name}TeamStats'
+    team_total_stats_name = f'{event_name}TotalTeamStats'
     drop_table(team_total_stats_name, curr, conn)
 
     create_total_team_stats = """
@@ -81,6 +80,18 @@ def create_tables(game_map: str, game_type: str, conn, curr):
     """.format(team_total_stats_name)
 
     curr.execute(create_total_team_stats)
+    conn.commit()
+
+    award_name = f'{event_name}Awards'
+    drop_table(award_name, curr, conn)
+    create_awards = """
+    CREATE TABLE {}(
+        place INTEGER PRIMARY KEY NOT NULL,
+        description TEXT NOT NULL,
+        team_id INTEGER NOT NULL
+    )
+    """.format(award_name)
+    curr.execute(create_awards)
     conn.commit()
 
 def connect(db_name):
