@@ -8,7 +8,7 @@ from pathlib import Path
 MAPS = ["Erangel", "Miramar", "Savage"]
 GAME_TYPE = ["Solo", "Duo", "Squad"]
 PLAYERCSV = 'player.csv'
-TEAMCSV = 'team_names.csv'
+TEAMCSV = 'teams.csv'
 
 def drop_table(table_name, curr, conn):
     drop = """
