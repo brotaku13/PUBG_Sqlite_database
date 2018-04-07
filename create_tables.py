@@ -94,6 +94,22 @@ def create_tables(game_map: str, game_type: str, conn, curr):
     curr.execute(create_awards)
     conn.commit()
 
+def create_players(conn, curr):
+    drop_table('Player', curr, conn)
+    create_player_table = """
+    CREATE TABLE Player(
+        username TEXT PRIMARY KEY NOT NULL,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        address TEXT NOT NULL,
+        gender TEXT NOT NULL,
+        age INTEGER NOT NULL
+    )
+    """
+    curr.execute(create_player_table)
+    conn.commit()
+
 def connect(db_name):
     data_dir = Path.cwd() / Path('Files') / '{}'.format(db_name)
     conn = sql.connect(str(data_dir))
@@ -107,5 +123,7 @@ def create_game():
     for game_map in maps:
         for game_type in game_types:
             create_tables(game_map, game_type, conn, curr)
+            
+    create_players(conn, curr)
 
 create_game()
