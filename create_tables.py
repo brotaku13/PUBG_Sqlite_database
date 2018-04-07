@@ -1,6 +1,14 @@
 import sqlite3 as sql
+import csv
+import random
+from collections import OrderedDict
+import re
 from pathlib import Path
 
+MAPS = ["Erangel", "Miramar", "Savage"]
+GAME_TYPE = ["Solo", "Duo", "Squad"]
+PLAYERCSV = 'player.csv'
+TEAMCSV = 'team_names.csv'
 
 def drop_table(table_name, curr, conn):
     drop = """
@@ -10,11 +18,10 @@ def drop_table(table_name, curr, conn):
     conn.commit()
     
 def create_tables(game_map: str, game_type: str, conn, curr):
-    
     event_name = f'{game_map}{game_type}'
     drop_table(event_name, curr, conn)
     #create duo team makeup
-        # team #, player, primary key (Team#Player)
+        # team number, player, primary key (Team#Player)
     team_makeup_table_name = f'{event_name}TeamMakeup'
     create_team_makeup = """
     CREATE TABLE {}(
@@ -24,6 +31,10 @@ def create_tables(game_map: str, game_type: str, conn, curr):
     )
     """.format(team_makeup_table_name)
     curr.execute(create_team_makeup)
+
+    #insert DB information here
+    generateGameTables(game_map, game_type, conn, curr)
+
     conn.commit()
 
     for i in range(1,4):
@@ -46,6 +57,9 @@ def create_tables(game_map: str, game_type: str, conn, curr):
         """.format(team_round_stats_name)
 
         curr.execute(create_team_stats_round)
+
+        #insert DB information here
+
         conn.commit()
     
         create_player_stats_round = """
@@ -60,6 +74,9 @@ def create_tables(game_map: str, game_type: str, conn, curr):
         """.format(player_round_stats_name)
 
         curr.execute(create_player_stats_round)
+
+        #insert DB information here
+
         conn.commit()
         
     #create total team stats
@@ -80,6 +97,9 @@ def create_tables(game_map: str, game_type: str, conn, curr):
     """.format(team_total_stats_name)
 
     curr.execute(create_total_team_stats)
+
+    #insert DB information here
+
     conn.commit()
 
     award_name = f'{event_name}Awards'
@@ -92,6 +112,9 @@ def create_tables(game_map: str, game_type: str, conn, curr):
     )
     """.format(award_name)
     curr.execute(create_awards)
+
+    #insert DB information here
+
     conn.commit()
 
 def create_players(conn, curr):
@@ -108,6 +131,10 @@ def create_players(conn, curr):
     )
     """
     curr.execute(create_player_table)
+
+    #insert DB information here
+    generatePlayerTable(conn, curr)
+
     conn.commit()
 
 def connect(db_name):
@@ -127,3 +154,97 @@ def create_game():
     create_players(conn, curr)
 
 create_game()
+
+
+
+#######################################################
+#   Functions that insert DB information into the table
+#######################################################
+
+def generatePlayerTable(conn, curr):
+    """
+    Fills the 'PLayer' Table with random information
+    Must use create_players(conn, curr) before this function
+    """
+    cmd = """
+    INSERT INTO Player(username, first_name, last_name, phone, address, gender, age)
+    VALUES (?, ?, ?, ?, ?, ?, ?);
+    """
+
+    with open(PLAYERCSV, 'r') as f:
+        #Reads from the CSV file the random generation of players
+        reader = csv.DictReader(f)
+        data = list(reader)
+        for my_dict in data:
+            l = list()  #   An appendable list to execute a tuple later
+            for fields in self.FIELD_NAMES:
+                l.append(my_dict[fields])
+            curr.execute(cmd, tuple(l))
+
+def generateMapGameTypeTable(game_map: str, game_type: str, noTeams: int, conn, curr):
+    """
+    Fills the '{game_map}{game_type}TeamMakeup' Table with random information
+    Must use create_tables(game_map: str, game_type: str, conn, curr) before this function
+    and must have generated all the players in the Player TABLE.
+
+        ie:
+        TABLE ErangleSquadTeamMakeup
+            Team                Players
+            WalmartGreeters     JimmyJur
+                                JacobIr
+                                SonnySir
+                                CarlosJ
+            ...
+            ...
+            SunnySideKillers    BrianBrian
+                                MikeHunt
+                                MauricioChills
+                                SomeoneElse
+
+    """
+    noPerTeam = 0
+    if game_type == 'Solo':
+        noPerTeam = 1
+    elif game_type == 'Duo':
+        noPerTeam = 2
+    elif game_type == 'Squad':
+        noPerTeam = 4
+
+    with open(TEAMCSV, 'r') as f:
+        #Reads from the CSV file the random generation of teams
+        reader = csv.DictReader(f)
+        data = list(reader)
+
+        i = 0   # counter to limit the number of total Teams
+        teams_list = list() # helps later by checking if the team name already exists
+        usernames = list() # helps later by checking if the player's username is already taken
+
+        cmd = "SELECT username FROM Player"
+        curr.execute(cmd)
+        records = curr.fetchall()
+
+        event_name = f'{game_map}{game_type}'
+        team_makeup_table_name = f'{event_name}TeamMakeup'
+
+        cmd = """
+        INSERT INTO {}(team_id, username, (team_id, username))
+        VALUES (?, ?, ?);
+        """.format(team_makeup_table_name)
+    
+
+
+        while i < noTeams:
+            team_players = list()                   # list of players of size noPerTeam to execute later
+            team_name = random.choice(data)['team_names']
+            if not team_name in teams_list:         # checks if the team name is already taken
+                usernames.append(team_name)         # updates a list of taken names
+                teams_list.append(team_name)        # updates the list of a team's players
+                i += 1
+                j = 0                               # counter to limit the number of players per team
+                while j < noPerTeam:
+                    player = random.choice(records)
+                    if not player in team:          # checks if the player's username is taken
+                        team_players.append(player) # updates a list of taken names
+
+
+                curr.execute(cmd, (team_name, tuple(team_players)))
