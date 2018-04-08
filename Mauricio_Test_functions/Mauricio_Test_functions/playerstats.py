@@ -45,6 +45,9 @@ class PlayerStats:
 
         self.__add_playerstats()
 
+########################################################################
+#   Here Starts functions that fill up the player stats
+########################################################################
     def __add_playerstats(self):
         """
         Fills the 'PLayer' Table with random information
@@ -102,6 +105,9 @@ class PlayerStats:
                 killList.append(choice)
         return killList
 
+########################################################################
+#   Here Ends functions that fill up the player stats
+########################################################################
 
     def see_all(self):
         cmd = "SELECT * FROM PlayerStats"
