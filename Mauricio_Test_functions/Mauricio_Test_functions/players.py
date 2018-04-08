@@ -72,6 +72,10 @@ class Players:
         records = self.__cur.fetchall()
         self.__pretty_print(records, self.__fieldNames)
 
+    def getRecords(self, cmd):
+        self.__cur.execute(cmd)
+        return self.__cur.fetchall()
+
     def __pretty_print(self, records, column_headers):
         """Pretty print the records with given column headers"""
         # Create a format string making each column left aligned and 30 characters wide

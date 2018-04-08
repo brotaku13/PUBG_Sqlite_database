@@ -12,11 +12,10 @@ def main():
     print("""######\tTests players.py\t######""")
     a = Players()
     a.see_all()
-    print()
 
 
     print("""######\tTests playerstats\t######""")
-    b = PlayerStats()
+    b = PlayerStats(a)
     b.see_all()
     print()
 

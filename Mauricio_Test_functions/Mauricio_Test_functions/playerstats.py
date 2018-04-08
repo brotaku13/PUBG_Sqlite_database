@@ -1,3 +1,5 @@
+from players import Players
+import random
 import sqlite3 as sq
 import csv
 
@@ -5,11 +7,11 @@ import csv
 PLAYERSTATSSQL = "PlayerStats.sqlite"
 
 class PlayerStats:
-    def __init__(self):
+    def __init__(self, player):
         self.__conn = sq.connect(PLAYERSTATSSQL)
         self.__cur = self.__conn.cursor()
         self.__fieldNames = ["username", "event_id", "team_id", "kills", "damage", "distance", "headshots", "time", "death"]
-
+        self.__player = player
         self.__create_table()
 
     def __dropTable(self, tables):
@@ -36,7 +38,7 @@ class PlayerStats:
         distance INTEGER,
         headshots INTEGER,
         time INTEGER,
-        death INTEGER
+        death BIT
         );
         """
         self.__cur.execute(cmd)
@@ -54,12 +56,51 @@ class PlayerStats:
         """
         total_kills_possible = 99
 
-        ###################################
-        ####   Enter Algorithm Here    ####
-        ###################################
-        self.__cur.execute(cmd, ("someUsername3", 3, 3, 4, 100, 1000, 2, 3459, 1))
-        self.__cur.execute(cmd, ("someUsername1", 3, 2, 4, 100, 1000, 2, 3459, 0))
-        self.__cur.execute(cmd, ("someUsername2", 3, 1, 4, 100, 1000, 2, 3459, 0))
+        playerRecords = self.__player.getRecords("SELECT * FROM Player") #playerRecords[1] is username
+        event_id = random.choice(range(1,4)) #choose randomly if the game is solo, duo, or squad
+        team_id = list()
+        kills = self.__getKills()
+        distance = list(map(lambda x: 10 * random.choice(range(1, 101)), list(range(1, 101))))
+        time = list(map(lambda x: 10 * random.choice(range(1, 101)), list(range(1, 101))))
+        death = list(map(lambda x: 0, list(range(1, 101))))
+
+        found = False
+        while not found:
+            choose = random.choice(range(1,100))
+            if kills[choose] > 0:
+                death[choose] = 1
+                found = True
+
+        if event_id == 1:
+            #solo
+            team_id = list(range(1, 101))
+        elif event_id == 2:
+            #duo
+            for i in range(1, 51):
+                team_id.append(i)
+                team_id.append(i)
+        elif event_id == 3:
+            #squad
+            for i in range(1, 26):
+                team_id.append(i)
+                team_id.append(i)
+                team_id.append(i)
+                team_id.append(i)
+
+        for i in range(0, 100):
+            self.__cur.execute(cmd, (playerRecords[i][1], event_id, team_id[i], kills[i], kills[i] * 100, distance[i], random.choice(range(0, kills[i] + 1)), time[i], death[i]))
+
+    def __getKills(self):
+        kills = 99
+        killList = list()
+        for i in range(0, 100):
+            choice = random.choice(range(0, 5))
+            if choice > kills:
+                killList.append(kills)
+            elif choice <= kills:
+                kills -= choice
+                killList.append(choice)
+        return killList
 
 
     def see_all(self):
@@ -68,6 +109,10 @@ class PlayerStats:
 
         records = self.__cur.fetchall()
         self.__pretty_print(records, self.__fieldNames)
+
+    def getRecords(self, cmd):
+        self.__cur.execute(cmd)
+        return self.__cur.fetchall()
 
     def __pretty_print(self, records, column_headers):
         """Pretty print the records with given column headers"""

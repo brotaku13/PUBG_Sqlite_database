@@ -28,12 +28,15 @@
     <Compile Include="events.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="introdb_sltn.py" />
+    <Compile Include="introsql.py" />
     <Compile Include="players.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="playerstats.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="sql_keys.py" />
     <Compile Include="teams.py">
       <SubType>Code</SubType>
     </Compile>
