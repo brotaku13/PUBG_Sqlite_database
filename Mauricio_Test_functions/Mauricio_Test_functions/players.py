@@ -3,8 +3,8 @@ import csv
 
 
 
-PLAYERCSV = "player.csv"
-PLAYERSQL = "Player.sqlite"
+PLAYERCSV = "players.csv"
+PLAYERSQL = "Players.sqlite"
 
 class Players:
 
@@ -27,10 +27,10 @@ class Players:
             self.__cur.execute(drop)
 
     def __create_table(self):
-        self.__dropTable("Player")
+        self.__dropTable("Players")
 
         cmd = """
-        CREATE TABLE Player(
+        CREATE TABLE Players(
         id INTEGER PRIMARY KEY NOT NULL,
         username TEXT,
         first_name TEXT,
@@ -51,7 +51,7 @@ class Players:
         Must use create_players(conn, curr) before this function
         """
         cmd = """
-        INSERT INTO Player(id, username, first_name, last_name, phone, address, gender, age)
+        INSERT INTO Players(id, username, first_name, last_name, phone, address, gender, age)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?);
         """
 
@@ -66,7 +66,7 @@ class Players:
                 self.__cur.execute(cmd, tuple(l))
 
     def see_all(self):
-        cmd = "SELECT * FROM Player"
+        cmd = "SELECT * FROM Players"
         self.__cur.execute(cmd)
 
         records = self.__cur.fetchall()

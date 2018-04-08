@@ -59,7 +59,7 @@ class PlayerStats:
         """
         total_kills_possible = 99
 
-        playerRecords = self.__player.getRecords("SELECT * FROM Player") #playerRecords[1] is username
+        playerRecords = self.__player.getRecords("SELECT * FROM Players") #playerRecords[1] is username
         event_id = random.choice(range(1,4)) #choose randomly if the game is solo, duo, or squad
         team_id = list()
         kills = self.__getKills()

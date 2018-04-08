@@ -14,19 +14,19 @@ def main():
     a.see_all()
 
 
-    print("""######\tTests playerstats\t######""")
+    print("""######\tTests PlayerStats\t######""")
     b = PlayerStats(a)
     b.see_all()
-    print()
-
-    print("""######\tTests playerstats\t######""")
-    c = Teams()
-    c.see_all()
     print()
 
     print("""######\tTests Events\t######""")
     d = Events()
     d.see_all()
+    print()
+
+    print("""######\tTests Teams\t######""")
+    c = Teams(a, d)
+    c.see_all()
     print()
 
     print("""######\tTests Awards\t######""")

@@ -1,6 +1,6 @@
 import sqlite3 as sq
 import csv
-
+import random
 
 EVENTSSQL = "Events.sqlite"
 
@@ -50,9 +50,16 @@ class Events:
         ###################################
         ####   Enter Algorithm Here    ####
         ###################################
-        self.__cur.execute(cmd, (1, "Erangel"))
-        self.__cur.execute(cmd, (2, "Miramar"))
-        self.__cur.execute(cmd, (3, "Savage"))
+        event_id = random.choice(range(1, 4))
+        event_name = ""
+        if event_id == 1:
+            event_name = "Erangel"
+        elif event_id == 2:
+            event_name = "Miramar"
+        elif event_id == 3:
+            event_name = "Savage"
+
+        self.__cur.execute(cmd, (event_id, event_name))
 
     def see_all(self):
         cmd = "SELECT * FROM Events"

@@ -8,11 +8,12 @@ TEAMSSQL = "Teams.sqlite"
 
 class Teams:
 
-    def __init__(self):
+    def __init__(self, player, event):
         self.__conn = sq.connect(TEAMSSQL)
         self.__cur = self.__conn.cursor()
         self.__fieldNames = ["team_id", "username", "event_id"]
-
+        self.__player = player
+        self.__event = event
         self.__create_table()
 
     def __dropTable(self, tables):
@@ -31,8 +32,8 @@ class Teams:
 
         cmd = """
         CREATE TABLE Teams(
-        team_id INTEGER PRIMARY KEY NOT NULL,
-        username TEXT,
+        team_id INTEGER,
+        username TEXT PRIMARY KEY NOT NULL,
         event_id INTEGER
         );
         """
@@ -53,9 +54,32 @@ class Teams:
         ###################################
         ####   Enter Algorithm Here    ####
         ###################################
-        self.__cur.execute(cmd, (1, "someUsername3", 3))
-        self.__cur.execute(cmd, (2, "someUsername1", 3))
-        self.__cur.execute(cmd, (3, "someUsername2", 3))
+        
+        team_id = list()
+
+        eventRecords = self.__event.getRecords("SELECT * FROM Events")
+        event_id = eventRecords[0][0]
+
+        if event_id == 1:
+            #solo
+            team_id = list(range(1, 101))
+        elif event_id == 2:
+            #duo
+            for i in range(1, 51):
+                team_id.append(i)
+                team_id.append(i)
+        elif event_id == 3:
+            #squad
+            for i in range(1, 26):
+                team_id.append(i)
+                team_id.append(i)
+                team_id.append(i)
+                team_id.append(i)
+
+        playerRecords = self.__player.getRecords("SELECT * FROM Players")
+
+        for i in range(0, 100):
+            self.__cur.execute(cmd, (team_id[i], playerRecords[i][1], event_id))
 
     def see_all(self):
         cmd = "SELECT * FROM Teams"
