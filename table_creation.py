@@ -1,6 +1,7 @@
 import sqlite3 as sql
 import csv
 from pathlib import Path
+import utility_functions
 
 def drop_table(table_name, conn, curr):
     """
@@ -50,12 +51,13 @@ def create_events(conn, curr):
     CREATE TABLE Events(
     event_id INTEGER PRIMARY KEY NOT NULL,
     event_name TEXT NOT NULL,
+    round INTEGER NOT  NULL,
+    game_number INTEGER NOT NULL,
     num_teams INTEGER NOT NULL
     )
     """
     curr.execute(cmd)
     conn.commit()
-
 
 def create_teams(conn, curr):
     """
@@ -120,10 +122,26 @@ def create_playerstats(conn, curr):
     headshots INTEGER,
     time INTEGER,
     death BIT,
+    score INTEGER,
     PRIMARY KEY (user_id, event_id),
     FOREIGN KEY(user_id) REFERENCES Players(user_id),
     FOREIGN KEY(event_id) REFERENCES Events(event_id),
     FOREIGN KEY(team_id) REFERENCES Teams(team_id)
+    )
+    """
+    curr.execute(cmd)
+    conn.commit()
+
+def create_team_scores(conn, curr):
+    drop_table('TeamScores', conn, curr)
+    cmd = """
+    CREATE TABLE TeamScores(
+        team_id INTEGER,
+        event_id INTEGER, 
+        score INTEGER,
+        PRIMARY KEY(team_id, event_id),
+        FOREIGN KEY(event_id) REFERENCES Events(event_id),
+        FOREIGN KEY(team_id) REFERENCES Teams(team_id)
     )
     """
     curr.execute(cmd)
@@ -137,11 +155,11 @@ def add_players(conn, curr):
     """
 
     cmd = """
-    INSERT INTO Players(user_id, username, first_name, last_name, phone, address, gender, age)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+    INSERT INTO Players(username, first_name, last_name, phone, address, gender, age)
+    VALUES (?, ?, ?, ?, ?, ?, ?);
     """
-    PLAYERCSV = "players.csv"
-    fieldNames = ["user_id", "username", "first_name", "last_name", "phone", "address", "gender", "age"]
+    PLAYERCSV = "player_data.csv"
+    fieldNames = ["username", "first_name", "last_name", "phone", "address", "gender", "age"]
 
     with open(PLAYERCSV, 'r') as f:
         #Reads from the CSV file the random generation of players
@@ -162,12 +180,16 @@ def add_events(events, conn, curr):
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
     for event in events:
-        add_event = """
-        INSERT INTO Events(event_name, num_teams)
-        VALUES(?, ?)
-        """
-        curr.execute(add_event, event)
-        conn.commit()
+        event_name = event[0]
+        num_teams = event[1]
+        for game_round in range(1, 4):  # 3 rounds 1 game less each round
+            for game_num in range(0, 3 - (game_round - 1)):
+                add_event = """
+                INSERT INTO Events(event_name, round, game_number, num_teams)
+                VALUES(?, ?, ?, ?)
+                """
+                curr.execute(add_event, (event_name, game_round, game_num + 1, num_teams))
+                conn.commit()
 
 def create_tables(events, curr, conn):
     """
@@ -181,6 +203,8 @@ def create_tables(events, curr, conn):
     create_teams(conn, curr)
     create_awards(conn, curr)
     create_playerstats(conn, curr)
+    create_team_scores(conn, curr)
     add_players(conn, curr)
     add_events(events, conn, curr)
+    utility_functions.print_all(curr)
 

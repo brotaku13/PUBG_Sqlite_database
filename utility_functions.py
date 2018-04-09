@@ -108,13 +108,14 @@ def print_table(cmd, table_name, curr, args=()):
     :param: curr [sqlite3.cursor] -- cursor in the db
     :param: args [tuple] -- any optional arguments to be passed to the cmd string
     """
-    print(table_name)
+    
     # find table
     if args == ():
         curr.execute(cmd)
     else:
         curr.execute(cmd, args)
     results = curr.fetchall()
+    print('{} -- {} items'.format(table_name, len(results)))
 
     # get column names
     column_names = []
@@ -174,6 +175,7 @@ def print_all(curr):
             SELECT * FROM {}
             """.format(table[0])
             print_table(cmd, table[0], curr)
+    
     
 def connect(db_name):
     """
