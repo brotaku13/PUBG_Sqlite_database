@@ -231,8 +231,6 @@ def generateMapGameTypeTable(game_map: str, game_type: str, noTeams: int, conn, 
         VALUES (?, ?, ?);
         """.format(team_makeup_table_name)
     
-
-
         while i < noTeams:
             team_players = list()                   # list of players of size noPerTeam to execute later
             team_name = random.choice(data)['team_names']
