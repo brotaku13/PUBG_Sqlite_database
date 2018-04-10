@@ -101,56 +101,52 @@ class Game:
     team_id = 1
     
     def __init__(self, num_teams, event_id, players, connection, cursor):
-        self.__num_teams = num_teams
-        self.__players_per_team = 100 / self.__num_teams
-        self.__event_id = event_id
-        self.__players = players
-        self.__teams = {}  # team_id: [list of Players()]
-        self.__conn = connection
-        self.__curr = cursor
+        self._num_teams = num_teams
+        self._players_per_team = 100 / self._num_teams
+        self._event_id = event_id
+        self._players = players
+        self._teams = {}  # team_id: [list of Players()]
+        self._conn = connection
+        self._curr = cursor
         self.__form_teams(players)
 
     def __form_teams(self, player_records):
         """
         Forms teams based on the number of teams and the Player table in the db
+        :param: player_records [list] -- list of 1-tuples holding the player-ids
         """
-
-        for player in player_records:
-            user_id = player[0]
-            # check to see if first round has happened, if so, then the players must use the team_id's from the previous rounds
-            if Game.team_id > self.__num_teams * 3:
-                #all three rounds have taken place, need to find team ID from team table
-                find_id = """
-                SELECT team_id FROM Teams
-                WHERE user_id=?
-                """
-                self.__curr.execute(find_id, (user_id,))
-                team_records = self.__curr.fetchall()
+        if Game.team_id > self._num_teams * 3:
+            for player in player_records:
+                # all three games in round one have taken place, need to find team ID from team table
+                user_id = player[0]
+                cteam_id = player[1]
 
                 insert = """
                 INSERT INTO Teams(team_id, user_id, event_id)
                 VALUES(?, ?, ?)
                 """
-                continuing_team_id = team_records[0][0]
-                self.__curr.execute(insert, (continuing_team_id, user_id, self.__event_id))
-                self.__conn.commit()
+                self._curr.execute(insert, (cteam_id, user_id, self._event_id))
+                self._conn.commit()
 
-                if continuing_team_id in self.__teams:
-                    self.__teams[continuing_team_id].append(Player(user_id))
+                if cteam_id in self._teams:
+                    self._teams[cteam_id].append(Player(user_id))
                 else:
-                    self.__teams[continuing_team_id] = [Player(user_id)]
-            else:
-                # three rounds have not taken place, so use the static id
-                insert = """
-                INSERT INTO Teams(team_id, user_id, event_id)
-                VALUES(?, ?, ?)
-                """
-                self.__curr.execute(insert, (Game.team_id, user_id, self.__event_id))
-                self.__conn.commit()
-                if Game.team_id in self.__teams:
-                    self.__teams[Game.team_id].append(Player(user_id))
-                else:
-                    self.__teams[Game.team_id] = [Player(user_id)]
+                    self._teams[cteam_id] = [Player(user_id)]
+        else:
+            jump = int(100 / self._num_teams)
+            for i in range(0, len(player_records), jump):
+                for j in range(jump):
+                    user_id = player_records[i + j][0]
+                    insert = """
+                    INSERT INTO Teams(team_id, user_id, event_id)
+                    VALUES(?, ?, ?)
+                    """
+                    self._curr.execute(insert, (Game.team_id, user_id, self._event_id))
+                    self._conn.commit()
+                    if Game.team_id in self._teams:
+                        self._teams[Game.team_id].append(Player(user_id))
+                    else:
+                        self._teams[Game.team_id] = [Player(user_id)]
 
                 Game.team_id += 1
 
@@ -167,7 +163,7 @@ class Game:
         while Player.num_players > 1:
             Player.time_elapsed += random.randint(Game.minimum_turn_len, Game.maximum_turn_len)
 
-            for t_id, player_list in self.__teams.items():
+            for t_id, player_list in self._teams.items():
                 for player in player_list:
                     if player in Player.alive_players:
                         player.take_turn()
@@ -183,7 +179,7 @@ class Game:
         Convenience funtion for printing the game outcome and player stats
         """
         print('Total Turns: ', turns)
-        for t_id, player_list in self.__teams.items():
+        for t_id, player_list in self._teams.items():
             print(f'Team: {t_id}')
             for player in player_list:
                 print('\t', player)
@@ -192,15 +188,15 @@ class Game:
         """
         records the stats from each player object into the PlayerStats table
         """
-        for t_id, player_list in self.__teams.items():
+        for t_id, player_list in self._teams.items():
             for player in player_list:
                 cmd = """
                 INSERT INTO PlayerStats(user_id, event_id, team_id, kills, damage, distance, headshots, time, death, score)
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """
-                values = [player.user_id, self.__event_id, t_id]
+                values = [player.user_id, self._event_id, t_id]
                 values += player.stats()
-                self.__curr.execute(cmd, tuple(values))
+                self._curr.execute(cmd, tuple(values))
 
     def update_awards(self):
         """
@@ -208,9 +204,6 @@ class Game:
         """
         pass
     
-    
-
-
 def new_game(event_id, num_teams, players, curr, conn):
     """
     creates and initializes a new game.

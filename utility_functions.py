@@ -176,7 +176,6 @@ def print_all(curr):
             """.format(table[0])
             print_table(cmd, table[0], curr)
     
-    
 def connect(db_name):
     """
     Provides a connection to the sqlite3 database
