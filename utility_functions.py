@@ -10,7 +10,8 @@ def display_player_by_name(curr):
     cmd = """
     SELECT first_name, last_name FROM Players
     """
-    print_table(cmd, 'Display user by name', curr)
+    return print_table(cmd, 'Display user by name', curr)
+
 
 def list_players(curr):
     """
@@ -20,7 +21,8 @@ def list_players(curr):
     cmd = """
     SELECT * FROM Players
     """
-    print_table(cmd, 'Display all Players', curr)
+    return print_table(cmd, 'Display all Players', curr)
+
 
 def male_players(curr):
     """
@@ -31,7 +33,8 @@ def male_players(curr):
     SELECT * FROM Players
     WHERE gender='Male'
     """
-    print_table(cmd, 'Display all Male Players', curr)
+    return print_table(cmd, 'Display all Male Players', curr)
+
 
 def female_players(curr):
     """
@@ -42,7 +45,8 @@ def female_players(curr):
     SELECT * FROM Players
     WHERE gender='Female'
     """
-    print_table(cmd, 'Display all female Players', curr)
+    return print_table(cmd, 'Display all female Players', curr)
+
 
 def list_events(curr):
     """
@@ -50,22 +54,43 @@ def list_events(curr):
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
-    SELECT event_name FROM Events
+    SELECT round, event_name, game_number FROM Events
     """
-    print_table(cmd, 'Display all Events', curr)
+    return print_table(cmd, 'Display all Events', curr)
+
 
 def players_by_event(curr):
     """
     Displays all players by event
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
+    records = list()
+
     cmd = """
     SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_name, Events.round
     FROM Players JOIN Teams ON Players.user_id = Teams.user_id
     JOIN Events ON Teams.event_id = Events.event_id
-    ORDER BY Events.round
+    WHERE Events.round = 1;
     """
-    print_table(cmd, 'Players by Event', curr)
+    records.append(print_table(cmd, 'Players by Event:Round 1', curr))
+
+    cmd = """
+    SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_name, Events.round
+    FROM Players JOIN Teams ON Players.user_id = Teams.user_id
+    JOIN Events ON Teams.event_id = Events.event_id
+    WHERE Events.round = 2;
+    """
+    records.append(print_table(cmd, 'Players by Event: Round 2', curr))
+
+    cmd = """
+    SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_name, Events.round
+    FROM Players JOIN Teams ON Players.user_id = Teams.user_id
+    JOIN Events ON Teams.event_id = Events.event_id
+    WHERE Events.round = 3;
+    """
+    records.append(print_table(cmd, 'Players by Event: Round 3', curr))
+
+    return tuple(records)
 
 def winners_by_event(curr):
     """
@@ -76,16 +101,8 @@ def winners_by_event(curr):
     SELECT Awards.event_name, Awards.place, Awards.description, TeamScores.team_id, TeamScores.score
     FROM TeamScores JOIN Events ON TeamScores.event_id = Events.event_id
     JOIN Awards ON Awards.event_name = Events.event_name
-    WHERE TeamScores.event_id=6
-    ORDER BY TeamScores.score DESC LIMIT 3
     """
-    cmd2 = """
-    SELECT Awards.place, Awards.description, TeamScores.team_id, TeamScores.score
-    FROM Awards JOIN TeamScores ON Awards.event_id = TeamScores.event_id
-    JOIN Events on Events.event_id = Awards.event_id
-    ORDER BY score DESC LIMIT 10
-    """
-    print_table(cmd2, 'Winners by event', curr)
+    return print_table(cmd, 'Winners by event', curr)
 
 def lookup_id(name: str, event: str, age: int, curr):
     """
@@ -104,7 +121,7 @@ def lookup_id(name: str, event: str, age: int, curr):
         SELECT event_name FROM Events
         )
     """
-    print_table(cmd, 'Display all Events', curr, args=(first_name, last_name, age, event))
+    return print_table(cmd, 'Display all Events', curr, args=(first_name, last_name, age, event))
 
 def run_all(curr, conn):
     """
@@ -159,6 +176,8 @@ def print_table(cmd, table_name, curr, args=()):
         print('|')
     
     print()
+
+    return results
 
 def print_headers(column_names, max_column_width):
     """
