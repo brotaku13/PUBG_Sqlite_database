@@ -19,13 +19,26 @@ INVENTORY = "Inventory.csv"
 
 def main():
     conn, curr = utility_functions.connect('pubg_game_db.sqlite3')
-    testing(conn, curr)
+    testing(curr)
+    conn.close()
 
+def testAuto(test, number, function_name, curr):
+    print("Testing_{} Utility_Functions: {}".format(number, function_name))
+    try:
+        eval("utility_functions.{}(curr)".format(function_name))
+        print("\t\t\t...success\n")
+        time.sleep(SUBTIMEOUT)
+    except Exception:
+        print("\t\t\t...FAIL\n")
+        time.sleep(SUBTIMEOUT)
+    print("----------------------")
+    if test != 11:
+        testing(curr)
 
-def testing(conn, curr):
+def testing(curr):
     ##################################################
     print("Which test case would you like to test?")
-    print("1. Display Player By Name")
+    print("1. display_player_by_name")
     print("2. list_players")
     print("3. male_players")
     print("4. female_players")
@@ -43,102 +56,30 @@ def testing(conn, curr):
         test = int(result)
 
     if test == 1 or test == 11:
-        print("Testing_1 Utility_Functions: display_player_by_name")
-        try:
-            utility_functions.display_player_by_name(curr)
-            print("\t\t\t...success\n")
-            time.sleep(SUBTIMEOUT)
-        except Exception:
-            print("\t\t\t...FAIL\n")
-            time.sleep(SUBTIMEOUT)
-        print("----------------------")
-        if test != 11:
-            testing(conn, curr)
+        testAuto(test, 1, "display_player_by_name", curr)
 
     if test == 2 or  test == 11:
-        print("Testing_2 Utility_Functions: list_players")
-        try:
-            utility_functions.list_players(curr)
-            print("\t\t\t...success\n")
-            time.sleep(SUBTIMEOUT)
-        except Exception:
-            print("\t\t\t...FAIL\n")
-            time.sleep(SUBTIMEOUT)
-        print("----------------------")
-        if test != 11:
-            testing(conn, curr)
+        testAuto(test, 2, "list_players", curr)
 
     if test == 3 or test == 11:
-        print("Testing_3 Utility_Functions: male_players")
-        try:
-            utility_functions.male_players(curr)
-            print("\t\t\t...success\n")
-            time.sleep(SUBTIMEOUT)
-        except Exception:
-            print("\t\t\t...FAIL\n")
-            time.sleep(SUBTIMEOUT)
-        print("----------------------")
-        if test != 11:
-            testing(conn, curr)
+        testAuto(test, 3, "male_players", curr)
 
 
     #################################################
 
 
     if test == 4 or test == 11:
-        print("\n\nTesting_4 Utility_Functions: female_players")
-
-        try:
-            utility_functions.female_players(curr)
-            print("\t\t\t...success\n")
-            time.sleep(SUBTIMEOUT)
-        except Exception:
-            print("\t\t\t...FAIL\n")
-            time.sleep(SUBTIMEOUT)
-        print("----------------------")
-        if test != 11:
-            testing(conn, curr)
+        testAuto(test, 4, "female_players", curr)
 
     if test == 5 or test == 11:
-        print("Testing_5 Utility_Functions: list_events")
-
-        try:
-            utility_functions.list_events(curr)
-            print("\t\t\t...success\n")
-            time.sleep(SUBTIMEOUT)
-        except Exception:
-            print("\t\t\t...FAIL\n")
-            time.sleep(SUBTIMEOUT)
-        print("----------------------")
-        if test != 11:
-            testing(conn, curr)
+        testAuto(test, 5, "list_events", curr)
 
     if test == 6 or test == 11:
-        print("Testing_6 Utility_Functions: players_by_event")
-        try:
-            utility_functions.players_by_event(curr)
-            print("\t\t\t...success\n")
-            time.sleep(SUBTIMEOUT)
-        except Exception:
-            print("\t\t\t...FAIL\n")
-            time.sleep(SUBTIMEOUT)
-        print("----------------------")
-        if test != 11:
-            testing(conn, curr)
+        testAuto(test, 6, "players_by_event", curr)
 
 
     if test == 7 or test == 11:
-        print("Testing_7 Utility_Functions: winners_by_event")
-        try:
-            utility_functions.winners_by_event(curr)
-            print("\t\t\t...success\n")
-            time.sleep(SUBTIMEOUT)
-        except Exception:
-            print("\t\t\t...FAIL\n")
-            time.sleep(SUBTIMEOUT)
-        print("----------------------")
-        if test != 11:
-            testing(conn, curr)
+        testAuto(test, 7, "winners_by_event", curr)
 
     if test == 8 or test == 11:
         print("Testing_8 Utility_Functions: lookup_id")
@@ -154,13 +95,11 @@ def testing(conn, curr):
             print("\t\t\t...FAIL\n")
             time.sleep(SUBTIMEOUT)
         print("----------------------")
-        testing(conn, curr)
+        testing(curr)
 
     if test == 12:
         pass
 
-
-    conn.close()
 
     ###############################################################
     ###############################################################
