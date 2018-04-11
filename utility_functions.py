@@ -73,13 +73,19 @@ def winners_by_event(curr):
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
-    SELECT Awards.event_name, Awards.description, TeamScores.team_id, TeamScores.score
+    SELECT Awards.event_name, Awards.place, Awards.description, TeamScores.team_id, TeamScores.score
     FROM TeamScores JOIN Events ON TeamScores.event_id = Events.event_id
     JOIN Awards ON Awards.event_name = Events.event_name
     WHERE TeamScores.event_id=6
     ORDER BY TeamScores.score DESC LIMIT 3
     """
-    print_table(cmd, 'Winners by event', curr)
+    cmd2 = """
+    SELECT Awards.place, Awards.description, TeamScores.team_id, TeamScores.score
+    FROM Awards JOIN TeamScores ON Awards.event_id = TeamScores.event_id
+    JOIN Events on Events.event_id = Awards.event_id
+    ORDER BY score DESC LIMIT 10
+    """
+    print_table(cmd2, 'Winners by event', curr)
 
 def lookup_id(name: str, event: str, age: int, curr):
     """

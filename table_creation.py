@@ -22,11 +22,11 @@ def create_awards(conn, curr):
     cmd = """
     CREATE TABLE Awards(
         award_id INTEGER PRIMARY KEY NOT NULL,
-        event_name TEXT NOT NULL,
+        event_id INTEGER NOT NULL,
         place TEXT NOT NULL,
         description TEXT NOT NULL,
         team_id INTEGER NOT NULL,
-        FOREIGN KEY(event_name) REFERENCES Events(event_name)
+        FOREIGN KEY(event_id) REFERENCES Events(event_id)
         FOREIGN KEY(team_id) REFERENCES Teams(team_id)
     )
     """
@@ -191,10 +191,10 @@ def add_awards(events, awards, conn, curr):
         event_awards = awards[i]
         for place, description in event_awards.items():
             insert = """
-            INSERT INTO Awards(event_name, place, description, team_id)
+            INSERT INTO Awards(event_id, place, description, team_id)
             VALUES(?, ?, ?, ?)
             """
-            curr.execute(insert, (event_name, place, description, 0))
+            curr.execute(insert, (6, place, description, 0))
             conn.commit()
 
 def create_tables(events, awards, conn, curr):
