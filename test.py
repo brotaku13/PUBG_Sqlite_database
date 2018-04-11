@@ -1,11 +1,108 @@
-import game_creation
 import utility_functions
 import table_creation
 import game_creation
 import create_tables
+from pathlib import Path
+import time
+import sys
 import subprocess as sub
 
 TIMEOUT = 5
+SUBTIMEOUT = 1
+STRTHEAD = '\033[93m'
+STRTSUCC = '\033[92m'
+STRTFAIL = '\033[91m'
+END = '\033[0m'
+
+SALESHISTORY = "SalesHistory.csv"
+INVENTORY = "Inventory.csv"
+
+def main():
+    conn, curr = utility_functions.connect('pubg_game_db.sqlite3')
+    testing(curr)
+    conn.close()
+
+def testAuto(test, number, function_name, curr):
+    print("Testing_{} Utility_Functions: {}".format(number, function_name))
+    try:
+        eval("utility_functions.{}(curr)".format(function_name))
+        print("\t\t\t...success\n")
+        time.sleep(SUBTIMEOUT)
+    except Exception:
+        print("\t\t\t...FAIL\n")
+        time.sleep(SUBTIMEOUT)
+    print("----------------------")
+    if test != 11:
+        testing(curr)
+
+def testing(curr):
+    ##################################################
+    print("Which test case would you like to test?")
+    print("1. display_player_by_name")
+    print("2. list_players")
+    print("3. male_players")
+    print("4. female_players")
+    print("5. list_events")
+    print("6. players_by_event")
+    print("7. winners_by_event")
+    print("8. lookup_id")
+    print("11. Test Everything")
+    print("12. Start Program")
+
+    result = input("\nEnter the number: ")
+    if result == '':
+        test = 13
+    else:
+        test = int(result)
+
+    if test == 1 or test == 11:
+        testAuto(test, 1, "display_player_by_name", curr)
+
+    if test == 2 or  test == 11:
+        testAuto(test, 2, "list_players", curr)
+
+    if test == 3 or test == 11:
+        testAuto(test, 3, "male_players", curr)
+
+
+    #################################################
+
+
+    if test == 4 or test == 11:
+        testAuto(test, 4, "female_players", curr)
+
+    if test == 5 or test == 11:
+        testAuto(test, 5, "list_events", curr)
+
+    if test == 6 or test == 11:
+        testAuto(test, 6, "players_by_event", curr)
+
+
+    if test == 7 or test == 11:
+        testAuto(test, 7, "winners_by_event", curr)
+
+    if test == 8 or test == 11:
+        print("Testing_8 Utility_Functions: lookup_id")
+        try:
+            name = input("Enter the name: ")
+            event = input("Enter the event: ")
+            age = int(input("Enter the age: "))
+
+            utility_functions.lookup_id(name, event, age, curr)
+            print("\t\t\t...success\n")
+            time.sleep(SUBTIMEOUT)
+        except Exception:
+            print("\t\t\t...FAIL\n")
+            time.sleep(SUBTIMEOUT)
+        print("----------------------")
+        testing(curr)
+
+    if test == 12:
+        pass
+
+
+    ###############################################################
+    ###############################################################
 
 def update_scores(event_id, curr, conn):
     """
@@ -174,31 +271,5 @@ def run_competition(event, curr, conn):
 
     #utility_functions.print_table('SELECT * FROM TeamScores', 'teamScores', curr)
 
-def main_code():
-    print()
-    # get connection
-    conn, curr = utility_functions.connect('pubg_game_db.sqlite3')
-    # list all events and the team numbers associated with each event
-    events = [('ErangelSolo', 100)]
-    awards = [{'First': '$5000', 'Second': '$2500', 'Third': '$1000'}]
-    ### comment this portion to stop from recreating the whole database every single time #####
-    #######    so that you can test the required functions                                ######
-    table_creation.create_tables(events, awards, conn, curr)
-    for event in events:
-        run_competition(event, curr, conn)
-    ##########################################################################################
-    utility_functions.print_table('select * from TeamScores WHERE event_id = 6 order by score desc limit 10', 'Awards table', curr)
-    utility_functions.winners_by_event(curr)
-    # close the connection
-    conn.close()
-
-def main():
-    try:
-        sub.run(["python", "countdown.py", str(TIMEOUT)], timeout=TIMEOUT)
-        sub.run(["python", "test.py"])
-        main_code()
-    except sub.TimeoutExpired:
-        main_code()
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

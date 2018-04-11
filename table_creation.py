@@ -3,6 +3,7 @@ import csv
 from pathlib import Path
 import utility_functions
 
+
 def drop_table(table_name, conn, curr):
     """
     Drops the table if it exists
