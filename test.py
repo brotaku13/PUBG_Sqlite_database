@@ -1,11 +1,192 @@
-import game_creation
 import utility_functions
 import table_creation
 import game_creation
 import create_tables
+from pathlib import Path
+import time
+import sys
 import subprocess as sub
 
 TIMEOUT = 5
+SUBTIMEOUT = 1
+STRTHEAD = '\033[93m'
+STRTSUCC = '\033[92m'
+STRTFAIL = '\033[91m'
+END = '\033[0m'
+
+SALESHISTORY = "SalesHistory.csv"
+INVENTORY = "Inventory.csv"
+
+def main():
+    conn, curr = utility_functions.connect('pubg_game_db.sqlite3')
+    testing(conn, curr)
+
+
+def testing(conn, curr):
+    ##################################################
+    print("Which test case would you like to test?")
+    print("1. Display Player By Name")
+    print("2. list_players")
+    print("3. male_players")
+    print("4. female_players")
+    print("5. list_events")
+    print("6. players_by_event")
+    print("7. winners_by_event")
+    print("8. lookup_id")
+    print("11. Test Everything")
+    print("12. Start Program")
+
+    result = input("\nEnter the number: ")
+    if result == '':
+        test = 13
+    else:
+        test = int(result)
+
+    if test == 1 or test == 11:
+        #Testing Computer class
+        print("Testing_1 Utility_Functions: display_player_by_name")
+        try:
+            utility_functions.display_player_by_name(curr)
+            print("\t\t\t...success\n")
+            time.sleep(SUBTIMEOUT)
+        except Exception:
+            print("\t\t\t...FAIL\n")
+            time.sleep(SUBTIMEOUT)
+        print("----------------------")
+        if test != 11:
+            testing(conn, curr)
+
+    if test == 2 or  test == 11:
+        #Creates a string of all the computers
+        #I've used the string and printed it into a
+        #csv file in -> "Test_Cases/Test_2.csv"
+        print("Testing_2 Utility_Functions: list_players")
+        try:
+            utility_functions.list_players(curr)
+            print("\t\t\t...success\n")
+            time.sleep(SUBTIMEOUT)
+        except Exception:
+            print("\t\t\t...FAIL\n")
+            time.sleep(SUBTIMEOUT)
+        print("----------------------")
+        if test != 11:
+            testing(conn, curr)
+
+    if test == 3 or test == 11:
+        #Adds a computer to the INVENTORY file
+        #You just provide the inputs for the new computer
+        #Look at the SALESHISTORY file and you'll see its
+        #been updated with your new inventory.
+        print("Testing_3 Utility_Functions: male_players")
+        try:
+            utility_functions.male_players(curr)
+            print("\t\t\t...success\n")
+            time.sleep(SUBTIMEOUT)
+        except Exception:
+            print("\t\t\t...FAIL\n")
+            time.sleep(SUBTIMEOUT)
+        print("----------------------")
+        if test != 11:
+            testing(conn, curr)
+
+
+    #################################################
+
+
+    if test == 4 or test == 11:
+        #Testing Finance class
+        print("\n\nTesting_4 Utility_Functions: female_players")
+
+        try:
+            utility_functions.female_players(curr)
+            print("\t\t\t...success\n")
+            time.sleep(SUBTIMEOUT)
+        except Exception:
+            print("\t\t\t...FAIL\n")
+            time.sleep(SUBTIMEOUT)
+        print("----------------------")
+        if test != 11:
+            testing(conn, curr)
+
+    if test == 5 or test == 11:
+        #Creates a string of all the transactions in the history
+        #I've used the string and printed it into a
+        #csv file in -> "Test_Cases/Test_5.csv"
+        print("Testing_5 Utility_Functions: list_events")
+
+        try:
+            utility_functions.list_events(curr)
+            print("\t\t\t...success\n")
+            time.sleep(SUBTIMEOUT)
+        except Exception:
+            print("\t\t\t...FAIL\n")
+            time.sleep(SUBTIMEOUT)
+        print("----------------------")
+        if test != 11:
+            testing(conn, curr)
+
+    if test == 6 or test == 11:
+        #Adds a transaction to the SALESHISTORY file
+        #You just provide the inputs for the new sale
+        #Look at the SALESHISTORY file and you'll see its
+        #been updated with your new transaction. Also, it
+        #refreshed all other files for a decrease of inventory,
+        #from the sale.
+        print("Testing_6 Utility_Functions: players_by_event")
+        try:
+            utility_functions.players_by_event(curr)
+            print("\t\t\t...success\n")
+            time.sleep(SUBTIMEOUT)
+        except Exception:
+            print("\t\t\t...FAIL\n")
+            time.sleep(SUBTIMEOUT)
+        print("----------------------")
+        if test != 11:
+            testing(conn, curr)
+
+
+    if test == 7 or test == 11:
+        #Gets the average sales of a particular brand.
+        print("Testing_7 Utility_Functions: winners_by_event")
+        try:
+            utility_functions.winners_by_event(curr)
+            print("\t\t\t...success\n")
+            time.sleep(SUBTIMEOUT)
+        except Exception:
+            print("\t\t\t...FAIL\n")
+            time.sleep(SUBTIMEOUT)
+        print("----------------------")
+        if test != 11:
+            testing(conn, curr)
+
+    if test == 8 or test == 11:
+        #Gets the content of the category of the SALESHISTORY file.
+        #You need to provide the brand, series, modelNo and field name's
+        #content you want to get, ie:
+        #getInventory(brand, series, modelNo, headerCategory)
+        print("Testing_8 Utility_Functions: lookup_id")
+        try:
+            name = input("Enter the name: ")
+            event = input("Enter the event: ")
+            age = int(input("Enter the age: "))
+
+            utility_functions.lookup_id(name, event, age, curr)
+            print("\t\t\t...success\n")
+            time.sleep(SUBTIMEOUT)
+        except Exception:
+            print("\t\t\t...FAIL\n")
+            time.sleep(SUBTIMEOUT)
+        print("----------------------")
+        testing(conn, curr)
+
+    if test == 12:
+        pass
+
+
+    conn.close()
+
+    ###############################################################
+    ###############################################################
 
 def update_scores(event_id, curr, conn):
     """
@@ -174,31 +355,5 @@ def run_competition(event, curr, conn):
 
     #utility_functions.print_table('SELECT * FROM TeamScores', 'teamScores', curr)
 
-def main_code():
-    print()
-    # get connection
-    conn, curr = utility_functions.connect('pubg_game_db.sqlite3')
-    # list all events and the team numbers associated with each event
-    events = [('ErangelSolo', 100)]
-    awards = [{'First': '$5000', 'Second': '$2500', 'Third': '$1000'}]
-    ### comment this portion to stop from recreating the whole database every single time #####
-    #######    so that you can test the required functions                                ######
-    table_creation.create_tables(events, awards, conn, curr)
-    for event in events:
-        run_competition(event, curr, conn)
-    ##########################################################################################
-    utility_functions.print_table('select * from TeamScores WHERE event_id = 6 order by score desc limit 10', 'Awards table', curr)
-    utility_functions.winners_by_event(curr)
-    # close the connection
-    conn.close()
-
-def main():
-    try:
-        sub.run(["python", "countdown.py", str(TIMEOUT)], timeout=TIMEOUT)
-        sub.run(["python", "test.py"])
-        main_code()
-    except sub.TimeoutExpired:
-        main_code()
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

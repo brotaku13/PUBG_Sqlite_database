@@ -16,7 +16,7 @@ def drop_table(table_name, curr, conn):
     """.format(table_name)
     curr.execute(drop)
     conn.commit()
-    
+
 def create_tables(game_map: str, game_type: str, conn, curr):
     event_name = f'{game_map}{game_type}'
     drop_table(event_name, curr, conn)
@@ -42,7 +42,7 @@ def create_tables(game_map: str, game_type: str, conn, curr):
         player_round_stats_name = f'{event_name}PlayerStatsRound{i}'
         drop_table(team_round_stats_name, curr, conn)
         drop_table(player_round_stats_name, curr, conn)
-        
+
         # duo team stats for each round
         create_team_stats_round = """
         CREATE TABLE {}(
@@ -61,7 +61,7 @@ def create_tables(game_map: str, game_type: str, conn, curr):
         #insert DB information here
 
         conn.commit()
-    
+
         create_player_stats_round = """
         CREATE TABLE {}(
             username TEXT PRIMARY KEY NOT NULL,
@@ -78,7 +78,7 @@ def create_tables(game_map: str, game_type: str, conn, curr):
         #insert DB information here
 
         conn.commit()
-        
+
     #create total team stats
     team_total_stats_name = f'{event_name}TotalTeamStats'
     drop_table(team_total_stats_name, curr, conn)
@@ -144,16 +144,13 @@ def connect(db_name):
     return conn, curr
 
 def create_game():
-    maps = ['Erangel', 'Miramar', 'Savage']
-    game_types = ['Solo', 'Duo', 'Squad']
     conn, curr = connect('pubg_game_db.sqlite3')
     for game_map in maps:
         for game_type in game_types:
             create_tables(game_map, game_type, conn, curr)
-            
+
     create_players(conn, curr)
 
-create_game()
 
 
 
@@ -230,7 +227,7 @@ def generateMapGameTypeTable(game_map: str, game_type: str, noTeams: int, conn, 
         INSERT INTO {}(team_id, username, (team_id, username))
         VALUES (?, ?, ?);
         """.format(team_makeup_table_name)
-    
+
         while i < noTeams:
             team_players = list()                   # list of players of size noPerTeam to execute later
             team_name = random.choice(data)['team_names']
