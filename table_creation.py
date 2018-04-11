@@ -215,4 +215,3 @@ def create_tables(events, awards, conn, curr):
     add_events(events, conn, curr)
     add_awards(events, awards, conn, curr)
     utility_functions.print_all(curr)
-

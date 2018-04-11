@@ -67,7 +67,7 @@ def players_by_event(curr):
     """
     print_table(cmd, 'Players by Event', curr)
 
-def winners_by_event(curr):
+def winners_by_event(curr):   ##### TODO #####
     """
     Displays all winners of each event (uses award table)
     :param: curr [sqlite3.cursor] -- cursor in the db
@@ -87,7 +87,7 @@ def winners_by_event(curr):
     """
     print_table(cmd2, 'Winners by event', curr)
 
-def lookup_id(name: str, event: str, age: int, curr):
+def lookup_id(name: str, event: str, age: int, curr):    ##### TODO ######
     """
     Looks up id by name, event, and age
     :param: name [str] -- first and last name of Player to look up
@@ -106,6 +106,66 @@ def lookup_id(name: str, event: str, age: int, curr):
     """
     print_table(cmd, 'Display all Events', curr, args=(first_name, last_name, age, event))
 
+def delete_player_by_id(conn, curr):
+    """
+    removes a player from the player table.
+    :param: conn [sqlite3.connection] -- connection to the db
+    :param: curr [sqlite3.cursor] -- cursor in the db 
+    """
+    user_id = int(input('Enter the user id: '))
+    cmd = """
+    DELETE FROM Players WHERE user_id=?
+    """
+    curr.execute(cmd, (user_id,))
+    conn.commit()
+
+def update_player_by_id(conn, curr):
+    """
+    Updates player information
+    :param: conn [sqlite3.connection] -- connection to the db
+    :param: curr [sqlite3.cursor] -- cursor in the db 
+    """
+    user_id = int(input('Enter user id: '))
+    while True:
+        print('Which Attribute would you like to change? ')
+        print('1. Username')
+        print('2. First Name')
+        print('3. Last Name')
+        print('4. Phone')
+        print('5. Gender')
+        print('6. Age')
+        print('7. Quit')
+        try: 
+            choice = int(input('Attribute: '))
+            if choice < 1 || choice > 7:
+                raise ValueError('Bad choice')
+            else:
+                attribute_change = ''
+                if choice == 1:
+                    attribute_change = 'username={}'.format(input('New Username: '))
+                elif choice == 2:
+                    attribute_change = 'first_name={}'.format(input('New First Name: '))
+                elif choice == 3:
+                    attribute_change = 'last_name={}'.format(input('New Last Name: '))
+                elif choice == 4:
+                    attribute_change = 'phone={}'.format(int(input('New Phone (###-###-####)').replace('-', '')))
+                elif choice == 5:
+                    attribute_change = 'gender={}'.format(input('New Gender (Male / Female)').title())
+                elif choice == 6:
+                    attribute_change = 'age={}'.format(int(input('New Age (>18)')))
+                else:
+                    break
+
+                cmd = """
+                UPDATE Players
+                SET {}
+                WHERE user_id=?
+                """.format(attribute_change)
+                curr.execute(cmd, (user_id,))
+                conn.commit()
+        except Exception as e:
+            print('Please enter a valid number')
+        
 def run_all(curr, conn):
     """
     Runs all necessary functions. mostly used for utility and testing
@@ -117,7 +177,6 @@ def run_all(curr, conn):
     male_players(curr)
     female_players(curr)
     list_events(curr)
-
 
 def print_table(cmd, table_name, curr, args=()):
     """
