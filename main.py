@@ -4,6 +4,15 @@ import table_creation
 import game_creation
 
 def update_scores(event_id, curr, conn):
+    """
+    Updates the scores for a specific event. If it does not
+    exist, it adds the information into TeamScores. Or else
+    It updates the existing score to the new score.
+
+    event_id: int, The id number of the competition event.
+    curr: cursor, Allows Python code to execute sqlite code
+    conn: connection, Read-only attribute returning a reference to the connection.
+    """
     find_team_ids = """
     SELECT team_id, score FROM PlayerStats
     WHERE event_id=?
@@ -40,6 +49,14 @@ def update_scores(event_id, curr, conn):
             curr.execute(update, (old_score + new_score,team_id, event_id))
             
 def run_competition(event, curr, conn):
+    """
+    Runs the competition event based on the event. It
+    utilizes all other functions.
+
+    event: list, The event information needed to run the competition [event name, number of teams]
+    curr: cursor, Allows Python code to execute sqlite code
+    conn: connection, Read-only attribute returning a reference to the connection.
+    """
     event_name = event[0]
     num_teams = event[1]
     # get events for the competition
