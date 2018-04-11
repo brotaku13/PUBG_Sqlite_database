@@ -28,9 +28,10 @@ def testAuto(test, number, function_name, curr):
         eval("utility_functions.{}(curr)".format(function_name))
         print("\t\t\t...success\n")
         time.sleep(SUBTIMEOUT)
-    except Exception:
+    except Exception as e:
         print("\t\t\t...FAIL\n")
         time.sleep(SUBTIMEOUT)
+        print(str(e))
     print("----------------------")
     if test != 11:
         testing(curr)
@@ -100,9 +101,6 @@ def testing(curr):
     if test == 12:
         pass
 
-
-    ###############################################################
-    ###############################################################
 
 def update_scores(event_id, curr, conn):
     """
