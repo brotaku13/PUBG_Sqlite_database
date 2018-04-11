@@ -59,14 +59,27 @@ def players_by_event(curr):
     Displays all players by event
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
-    pass
+    cmd = """
+    SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_name, Events.round
+    FROM Players JOIN Teams ON Players.user_id = Teams.user_id
+    JOIN Events ON Teams.event_id = Events.event_id
+    ORDER BY Events.round
+    """
+    print_table(cmd, 'Players by Event', curr)
 
 def winners_by_event(curr):
     """
     Displays all winners of each event (uses award table)
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
-    pass
+    cmd = """
+    SELECT Awards.event_name, Awards.description, TeamScores.team_id, TeamScores.score
+    FROM TeamScores JOIN Events ON TeamScores.event_id = Events.event_id
+    JOIN Awards ON Awards.event_name = Events.event_name
+    WHERE TeamScores.event_id=6
+    ORDER BY TeamScores.score DESC LIMIT 3
+    """
+    print_table(cmd, 'Winners by event', curr)
 
 def lookup_id(name: str, event: str, age: int, curr):
     """

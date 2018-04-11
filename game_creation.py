@@ -125,7 +125,10 @@ class Game:
                 INSERT INTO Teams(team_id, user_id, event_id)
                 VALUES(?, ?, ?)
                 """
-                self._curr.execute(insert, (cteam_id, user_id, self._event_id))
+                try:
+                    self._curr.execute(insert, (cteam_id, user_id, self._event_id))
+                except Exception as e:
+                    print(e)
                 self._conn.commit()
 
                 if cteam_id in self._teams:

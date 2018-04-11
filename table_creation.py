@@ -17,23 +17,17 @@ def drop_table(table_name, conn, curr):
     conn.commit()
 
 def create_awards(conn, curr):
-    """
-    Creates the awards table
-    :param: conn [sqlite3.connection] -- connection to the db
-    :param: curr [sqlite3.cursor] -- cursor in the db
-    """
-
+    
     drop_table('Awards', conn, curr)
     cmd = """
     CREATE TABLE Awards(
-    event_id INTEGER KEY NOT NULL,
-    place INTEGER,
-    team_id INTEGER,
-    user_id INTEGER,
-    PRIMARY KEY (event_id, place),
-    FOREIGN KEY(event_id) REFERENCES Events(event_id),
-    FOREIGN KEY(team_id) REFERENCES Teams(team_id),
-    FOREIGN KEY(user_id) REFERENCES Players(user_id)
+        award_id INTEGER PRIMARY KEY NOT NULL,
+        event_name TEXT NOT NULL,
+        place TEXT NOT NULL,
+        description TEXT NOT NULL,
+        team_id INTEGER NOT NULL,
+        FOREIGN KEY(event_name) REFERENCES Events(event_name)
+        FOREIGN KEY(team_id) REFERENCES Teams(team_id)
     )
     """
     curr.execute(cmd)
@@ -191,7 +185,19 @@ def add_events(events, conn, curr):
                 curr.execute(add_event, (event_name, game_round, game_num + 1, num_teams))
                 conn.commit()
 
-def create_tables(events, curr, conn):
+def add_awards(events, awards, conn, curr):
+    for i in range(len(events)):
+        event_name = events[i][0]
+        event_awards = awards[i]
+        for place, description in event_awards.items():
+            insert = """
+            INSERT INTO Awards(event_name, place, description, team_id)
+            VALUES(?, ?, ?, ?)
+            """
+            curr.execute(insert, (event_name, place, description, 0))
+            conn.commit()
+
+def create_tables(events, awards, conn, curr):
     """
     Creates all necessary tables for the database
     :param: events [list] -- a list of tuples in (event_name, num_teams) format
@@ -206,5 +212,6 @@ def create_tables(events, curr, conn):
     create_team_scores(conn, curr)
     add_players(conn, curr)
     add_events(events, conn, curr)
+    add_awards(events, awards, conn, curr)
     utility_functions.print_all(curr)
 

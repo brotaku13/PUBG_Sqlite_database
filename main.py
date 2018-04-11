@@ -158,20 +158,21 @@ def main():
     conn, curr = utility_functions.connect('pubg_game_db.sqlite3')
 
     # list all events and the team numbers associated with each event
-    events = [('ErangelSolo', 25)]
+    events = [('ErangelSolo', 100)]
+    awards = [{'First': '$5000', 'Second': '$2500', 'Third': '$1000'}]
 
-    # create the tables
-    table_creation.create_tables(events, curr, conn)
+    ### comment this portion to stop from recreating the whole database every single time #####
+    #######    so that you can test the required functions                                ######
 
-    players_used = 0
-    #run competition
+    table_creation.create_tables(events, awards, conn, curr)
+
     for event in events:
         run_competition(event, curr, conn)
-        game_creation.Game.team_id = 1
 
-    # run all utility functions (so far)
-    #utility_functions.run_all(curr, conn)
+    ##########################################################################################
 
+    utility_functions.print_table('select * from TeamScores WHERE event_id = 6 order by score desc limit 10', 'Awards table', curr)
+    utility_functions.winners_by_event(curr)
     # close the connection
     conn.close()
 
