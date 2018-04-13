@@ -3,7 +3,6 @@ import csv
 from pathlib import Path
 import utility_functions
 
-
 def drop_table(table_name, conn, curr):
     """
     Drops the table if it exists
@@ -18,7 +17,7 @@ def drop_table(table_name, conn, curr):
     conn.commit()
 
 def create_awards(conn, curr):
-
+    
     drop_table('Awards', conn, curr)
     cmd = """
     CREATE TABLE Awards(
@@ -33,6 +32,7 @@ def create_awards(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
+    return curr.fetchall()
 
 def create_events(conn, curr):
     """
@@ -53,6 +53,7 @@ def create_events(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
+    return curr.fetchall()
 
 def create_teams(conn, curr):
     """
@@ -74,6 +75,7 @@ def create_teams(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
+    return curr.fetchall()
 
 def create_players(conn, curr):
     """
@@ -97,6 +99,7 @@ def create_players(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
+    return curr.fetchall()
 
 def create_playerstats(conn, curr):
     """
@@ -126,13 +129,14 @@ def create_playerstats(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
+    return curr.fetchall()
 
 def create_team_scores(conn, curr):
     drop_table('TeamScores', conn, curr)
     cmd = """
     CREATE TABLE TeamScores(
         team_id INTEGER,
-        event_id INTEGER,
+        event_id INTEGER, 
         score INTEGER,
         PRIMARY KEY(team_id, event_id),
         FOREIGN KEY(event_id) REFERENCES Events(event_id),
@@ -141,6 +145,7 @@ def create_team_scores(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
+    return curr.fetchall()
 
 def add_players(conn, curr):
     """
@@ -166,6 +171,7 @@ def add_players(conn, curr):
                 l.append(my_dict[fields])
             curr.execute(cmd, tuple(l))
             conn.commit()
+    return curr.fetchall()
 
 def add_events(events, conn, curr):
     """
@@ -185,6 +191,7 @@ def add_events(events, conn, curr):
                 """
                 curr.execute(add_event, (event_name, game_round, game_num + 1, num_teams))
                 conn.commit()
+    return curr.fetchall()
 
 def add_awards(events, awards, conn, curr):
     for i in range(len(events)):
@@ -197,6 +204,7 @@ def add_awards(events, awards, conn, curr):
             """
             curr.execute(insert, (6, place, description, 0))
             conn.commit()
+    return curr.fetchall()
 
 def create_tables(events, awards, conn, curr):
     """
@@ -216,33 +224,33 @@ def create_tables(events, awards, conn, curr):
     add_awards(events, awards, conn, curr)
     utility_functions.print_all(curr)
 
-
 def is_redundant(curr):
-    """
-    Table       # Fields
-    Players     8
+    try:
+        rowsCSV = 0
+        with open(PLAYER_DATA, 'r') as f:
+            #Reads from the CSV file the random generation of players
+            reader = csv.DictReader(f)
+            data = list(reader)
+            rowsCSV = len(data)
+        records = utility_functions.list_players()
+        rowsSQL = len(records)
 
-    """
-    rowsCSV = 0
-    with open("player_data.csv", 'r') as f:
-        #Reads from the CSV file the random generation of players
-        reader = csv.DictReader(f)
-        data = list(reader)
-        rowsCSV = len(data)
-    records = utility_functions.list_players(curr)
-    rowsSQL = len(records)
-
-    return rowsSQL == rowsCSV
+        return rowsSQL == rowsCSV
+    except Exception:
+        return False
 
 def is_event_redundant(curr, events):
-    if len(utility_functions.display_player_by_name(curr)) == 0:
-        return False
-    elif len(utility_functions.list_players(curr)) == 0:
-        return False
-    elif len(utility_functions.male_players(curr)) == 0:
-        return False
-    elif len(utility_functions.female_players(curr)) == 0:
-        return False
-    elif len(utility_functions.list_events(curr)) == 0:
+    try:
+        if len(utility_functions.display_player_by_name()) == 0:
+            return False
+        if len(utility_functions.list_players()) == 0:
+            return False
+        if len(utility_functions.male_players()) == 0:
+            return False
+        if len(utility_functions.female_players()) == 0:
+            return False
+        if len(utility_functions.list_events()) == 0:
+            return False
+    except Exception:
         return False
     return True
