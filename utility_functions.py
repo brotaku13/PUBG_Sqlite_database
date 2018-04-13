@@ -54,7 +54,7 @@ def list_events(curr):
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
-    SELECT round, event_name, game_number FROM Events
+    SELECT round, event_id, game_number FROM Events
     """
     return print_table(cmd, 'Display all Events', curr)
 
@@ -67,7 +67,7 @@ def players_by_event(curr):
     records = list()
 
     cmd = """
-    SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_name, Events.round
+    SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_id, Events.round
     FROM Players JOIN Teams ON Players.user_id = Teams.user_id
     JOIN Events ON Teams.event_id = Events.event_id
     WHERE Events.round = 1;
@@ -75,7 +75,7 @@ def players_by_event(curr):
     records.append(print_table(cmd, 'Players by Event:Round 1', curr))
 
     cmd = """
-    SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_name, Events.round
+    SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_id, Events.round
     FROM Players JOIN Teams ON Players.user_id = Teams.user_id
     JOIN Events ON Teams.event_id = Events.event_id
     WHERE Events.round = 2;
@@ -83,7 +83,7 @@ def players_by_event(curr):
     records.append(print_table(cmd, 'Players by Event: Round 2', curr))
 
     cmd = """
-    SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_name, Events.round
+    SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_id, Events.round
     FROM Players JOIN Teams ON Players.user_id = Teams.user_id
     JOIN Events ON Teams.event_id = Events.event_id
     WHERE Events.round = 3;
@@ -98,9 +98,9 @@ def winners_by_event(curr):   ##### TODO #####
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
-    SELECT Awards.event_name, Awards.place, Awards.description, TeamScores.team_id, TeamScores.score
+    SELECT Awards.event_id, Awards.place, Awards.description, TeamScores.team_id, TeamScores.score
     FROM TeamScores JOIN Events ON TeamScores.event_id = Events.event_id
-    JOIN Awards ON Awards.event_name = Events.event_name
+    JOIN Awards ON Awards.event_id = Events.event_id
     """
     return print_table(cmd, 'Winners by event', curr)
 
@@ -115,10 +115,10 @@ def lookup_id(name: str, event: str, age: int, curr):    ##### TODO ######
     first_name = name.split()[0]
     last_name = name.split()[1]
     cmd = """
-    SELECT user_id FROM Players 
+    SELECT user_id FROM Players
     WHERE first_name=? AND last_name=? AND age=?
     AND ? IN (
-        SELECT event_name FROM Events
+        SELECT event_id FROM Events
         )
     """
     return print_table(cmd, 'Display all Events', curr, args=(first_name, last_name, age, event))
@@ -127,7 +127,7 @@ def delete_player_by_id(conn, curr):
     """
     removes a player from the player table.
     :param: conn [sqlite3.connection] -- connection to the db
-    :param: curr [sqlite3.cursor] -- cursor in the db 
+    :param: curr [sqlite3.cursor] -- cursor in the db
     """
     user_id = int(input('Enter the user id: '))
     cmd = """
@@ -140,7 +140,7 @@ def update_player_by_id(conn, curr):
     """
     Updates player information
     :param: conn [sqlite3.connection] -- connection to the db
-    :param: curr [sqlite3.cursor] -- cursor in the db 
+    :param: curr [sqlite3.cursor] -- cursor in the db
     """
     user_id = int(input('Enter user id: '))
     while True:
@@ -152,9 +152,9 @@ def update_player_by_id(conn, curr):
         print('5. Gender')
         print('6. Age')
         print('7. Quit')
-        try: 
+        try:
             choice = int(input('Attribute: '))
-            if choice < 1 || choice > 7:
+            if choice < 1 or choice > 7:
                 raise ValueError('Bad choice')
             else:
                 attribute_change = ''
@@ -182,7 +182,7 @@ def update_player_by_id(conn, curr):
                 conn.commit()
         except Exception as e:
             print('Please enter a valid number')
-        
+
 def run_all(curr, conn):
     """
     Runs all necessary functions. mostly used for utility and testing
@@ -198,12 +198,12 @@ def run_all(curr, conn):
 def print_table(cmd, table_name, curr, args=()):
     """
     Prints a table in a readable format
-    :param: cmd [str] -- an sqlite3 command 
+    :param: cmd [str] -- an sqlite3 command
     :param: table_name [str] -- Title to display before the table is printed
     :param: curr [sqlite3.cursor] -- cursor in the db
     :param: args [tuple] -- any optional arguments to be passed to the cmd string
     """
-    
+
     # find table
     if args == ():
         curr.execute(cmd)
@@ -218,22 +218,22 @@ def print_table(cmd, table_name, curr, args=()):
         column_names.append(record[0])
 
     max_column_width = 0
-    
+
     # find max column width
     for i, column in enumerate(column_names):
         max_column_width = max(max_column_width, len(column))
         for result in results:
             max_column_width = max(max_column_width, len(str(result[i])))
-    
+
 
     print_headers(column_names, max_column_width)
-    
+
     # print the information for each table
     for record in results:
         for item in record:
             print('|{:<{width}}'.format(item, width=max_column_width), end='')
         print('|')
-    
+
     print()
 
     return results
@@ -272,7 +272,7 @@ def print_all(curr):
             SELECT * FROM {}
             """.format(table[0])
             print_table(cmd, table[0], curr)
-    
+
 def connect(db_name):
     """
     Provides a connection to the sqlite3 database

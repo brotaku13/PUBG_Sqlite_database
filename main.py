@@ -4,8 +4,9 @@ import table_creation
 import game_creation
 import create_tables
 import subprocess as sub
+import test
 
-TIMEOUT = 5
+TIMEOUT = 3
 
 def update_scores(event_id, curr, conn):
     """
@@ -174,36 +175,37 @@ def run_competition(event, curr, conn):
 
     #utility_functions.print_table('SELECT * FROM TeamScores', 'teamScores', curr)
 
-def main_code():
+def main_code(conn, curr):
     print()
     # get connection
-    conn, curr = utility_functions.connect('pubg_game_db.sqlite3')
     # list all events and the team numbers associated with each event
     events = [('ErangelSolo', 100)]
     awards = [{'First': '$5000', 'Second': '$2500', 'Third': '$1000'}]
-    
     ### comment this portion to stop from recreating the whole database every single time #####
     #######    so that you can test the required functions                                ######
+    if not table_creation.is_redundant(curr):
+        #this function checks to see if player table is filled already.
+        table_creation.create_tables(events, awards, conn, curr)
 
-    # table_creation.create_tables(events, awards, conn, curr)
+    if not table_creation.is_event_redundant(curr, events):
+        for event in events:
+            run_competition(event, curr, conn)
 
-    # for event in events:
-    #     run_competition(event, curr, conn)
-
-    utility_functions.print_table('select * from PlayerStats', 'playerstats', curr)
+    #utility_functions.print_table('select * from PlayerStats', 'playerstats', curr)
     ##########################################################################################
-    utility_functions.print_table('select * from TeamScores WHERE event_id = 6 order by score desc limit 10', 'Awards table', curr)
-    utility_functions.winners_by_event(curr)
+    #utility_functions.print_table('select * from TeamScores WHERE event_id = 6 order by score desc limit 10', 'Awards table', curr)
+    #utility_functions.winners_by_event(curr)
     # close the connection
     conn.close()
 
 def main():
     try:
-        main_code()
+        conn, curr = utility_functions.connect('pubg_game_db.sqlite3')
         sub.run(["python", "countdown.py", str(TIMEOUT)], timeout=TIMEOUT)
-        sub.run(["python", "test.py"])
+        if test.testing(curr):
+            main_code(conn, curr)
     except sub.TimeoutExpired:
-        main_code()
+        main_code(conn, curr)
 
 if __name__ == '__main__':
     main()

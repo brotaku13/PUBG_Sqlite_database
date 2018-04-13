@@ -17,11 +17,6 @@ END = '\033[0m'
 SALESHISTORY = "SalesHistory.csv"
 INVENTORY = "Inventory.csv"
 
-def main():
-    conn, curr = utility_functions.connect('pubg_game_db.sqlite3')
-    testing(curr)
-    conn.close()
-
 def testAuto(test, number, function_name, curr):
     print("Testing_{} Utility_Functions: {}".format(number, function_name))
     try:
@@ -49,40 +44,41 @@ def testing(curr):
     print("8. lookup_id")
     print("11. Test Everything")
     print("12. Start Program")
+    print("13. Exit Everything")
 
     result = input("\nEnter the number: ")
     if result == '':
-        test = 13
+        return True
     else:
         test = int(result)
 
     if test == 1 or test == 11:
         testAuto(test, 1, "display_player_by_name", curr)
 
-    if test == 2 or  test == 11:
+    elif test == 2 or  test == 11:
         testAuto(test, 2, "list_players", curr)
 
-    if test == 3 or test == 11:
+    elif test == 3 or test == 11:
         testAuto(test, 3, "male_players", curr)
 
 
     #################################################
 
 
-    if test == 4 or test == 11:
+    elif test == 4 or test == 11:
         testAuto(test, 4, "female_players", curr)
 
-    if test == 5 or test == 11:
+    elif test == 5 or test == 11:
         testAuto(test, 5, "list_events", curr)
 
-    if test == 6 or test == 11:
+    elif test == 6 or test == 11:
         testAuto(test, 6, "players_by_event", curr)
 
 
-    if test == 7 or test == 11:
+    elif test == 7 or test == 11:
         testAuto(test, 7, "winners_by_event", curr)
 
-    if test == 8 or test == 11:
+    elif test == 8 or test == 11:
         print("Testing_8 Utility_Functions: lookup_id")
         try:
             name = input("Enter the name: ")
@@ -98,8 +94,11 @@ def testing(curr):
         print("----------------------")
         testing(curr)
 
-    if test == 12:
-        pass
+    elif test == 12:
+        return True
+    elif test == 13:
+        return False
+
 
 
 def update_scores(event_id, curr, conn):

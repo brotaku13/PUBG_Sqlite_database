@@ -18,7 +18,7 @@ def drop_table(table_name, conn, curr):
     conn.commit()
 
 def create_awards(conn, curr):
-    
+
     drop_table('Awards', conn, curr)
     cmd = """
     CREATE TABLE Awards(
@@ -132,7 +132,7 @@ def create_team_scores(conn, curr):
     cmd = """
     CREATE TABLE TeamScores(
         team_id INTEGER,
-        event_id INTEGER, 
+        event_id INTEGER,
         score INTEGER,
         PRIMARY KEY(team_id, event_id),
         FOREIGN KEY(event_id) REFERENCES Events(event_id),
@@ -215,3 +215,34 @@ def create_tables(events, awards, conn, curr):
     add_events(events, conn, curr)
     add_awards(events, awards, conn, curr)
     utility_functions.print_all(curr)
+
+
+def is_redundant(curr):
+    """
+    Table       # Fields
+    Players     8
+
+    """
+    rowsCSV = 0
+    with open("player_data.csv", 'r') as f:
+        #Reads from the CSV file the random generation of players
+        reader = csv.DictReader(f)
+        data = list(reader)
+        rowsCSV = len(data)
+    records = utility_functions.list_players(curr)
+    rowsSQL = len(records)
+
+    return rowsSQL == rowsCSV
+
+def is_event_redundant(curr, events):
+    if len(utility_functions.display_player_by_name(curr)) == 0:
+        return False
+    elif len(utility_functions.list_players(curr)) == 0:
+        return False
+    elif len(utility_functions.male_players(curr)) == 0:
+        return False
+    elif len(utility_functions.female_players(curr)) == 0:
+        return False
+    elif len(utility_functions.list_events(curr)) == 0:
+        return False
+    return True
