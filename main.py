@@ -3,10 +3,13 @@ import utility_functions
 import table_creation
 import game_creation
 import create_tables
+import graph
 import subprocess as sub
+from pathlib import Path
 import test
 
 TIMEOUT = 3
+
 
 def update_scores(event_id, curr, conn):
     """
@@ -116,6 +119,7 @@ def run_competition(event, curr, conn):
             """
             utility_functions.print_table(top_teams, 'after round 1 -- top half of top 50', curr, args=(event_name, num_teams))
             curr.execute(top_teams, (event_name,num_teams))
+
         else:
             top_teams = """
             SELECT user_id, team_id FROM Teams
@@ -130,6 +134,7 @@ def run_competition(event, curr, conn):
             )
             """
             utility_functions.print_table(top_teams, 'after round 1 -- bottom half of top 200', curr, args=(event_name, num_teams, num_teams))
+
             curr.execute(top_teams, (event_name,num_teams, num_teams))
 
         players = curr.fetchall()
@@ -151,6 +156,7 @@ def run_competition(event, curr, conn):
 
     """
     utility_functions.print_table(finalists, 'Finalists, top 100 from round 2', curr, args=(event_name, num_teams))
+
     curr.execute(finalists, (event_name, num_teams))
     players = curr.fetchall()
 
@@ -182,25 +188,24 @@ def main_code(conn, curr):
     events = [('ErangelSolo', 100)]
     awards = [{'First': '$5000', 'Second': '$2500', 'Third': '$1000'}]
     ### comment this portion to stop from recreating the whole database every single time #####
-    #######    so that you can test the required functions                                ######
-    if not table_creation.is_redundant(curr):
+    #######    so that you can test the required functions         ##########
         #this function checks to see if player table is filled already.
+    if not table_creation.isredundant(curr):
         table_creation.create_tables(events, awards, conn, curr)
 
-    if not table_creation.is_event_redundant(curr, events):
         for event in events:
             run_competition(event, curr, conn)
 
-    #utility_functions.print_table('select * from PlayerStats', 'playerstats', curr)
+    utility_functions.print_table('select * from PlayerStats', 'playerstats', curr)
     ##########################################################################################
-    #utility_functions.print_table('select * from TeamScores WHERE event_id = 6 order by score desc limit 10', 'Awards table', curr)
-    #utility_functions.winners_by_event(curr)
+    utility_functions.print_table('select * from TeamScores WHERE event_id = 6 order by score desc limit 10', 'Awards table', curr)
+    utility_functions.winners_by_event(curr)
     # close the connection
     conn.close()
 
 def main():
     try:
-        conn, curr = utility_functions.connect('pubg_game_db.sqlite3')
+        conn, curr = utility_functions.connect()
         sub.run(["python", "countdown.py", str(TIMEOUT)], timeout=TIMEOUT)
         if test.testing(curr):
             main_code(conn, curr)

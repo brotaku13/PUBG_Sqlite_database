@@ -25,8 +25,8 @@ def testAuto(test, number, function_name, curr):
         time.sleep(SUBTIMEOUT)
     except Exception as e:
         print("\t\t\t...FAIL\n")
-        time.sleep(SUBTIMEOUT)
         print(str(e))
+        time.sleep(SUBTIMEOUT)
     print("----------------------")
     if test != 11:
         testing(curr)
@@ -55,30 +55,30 @@ def testing(curr):
     if test == 1 or test == 11:
         testAuto(test, 1, "display_player_by_name", curr)
 
-    elif test == 2 or  test == 11:
+    if test == 2 or  test == 11:
         testAuto(test, 2, "list_players", curr)
 
-    elif test == 3 or test == 11:
+    if test == 3 or test == 11:
         testAuto(test, 3, "male_players", curr)
 
 
     #################################################
 
 
-    elif test == 4 or test == 11:
+    if test == 4 or test == 11:
         testAuto(test, 4, "female_players", curr)
 
-    elif test == 5 or test == 11:
+    if test == 5 or test == 11:
         testAuto(test, 5, "list_events", curr)
 
-    elif test == 6 or test == 11:
+    if test == 6 or test == 11:
         testAuto(test, 6, "players_by_event", curr)
 
 
-    elif test == 7 or test == 11:
+    if test == 7 or test == 11:
         testAuto(test, 7, "winners_by_event", curr)
 
-    elif test == 8 or test == 11:
+    if test == 8 or test == 11:
         print("Testing_8 Utility_Functions: lookup_id")
         try:
             name = input("Enter the name: ")
@@ -88,185 +88,18 @@ def testing(curr):
             utility_functions.lookup_id(name, event, age, curr)
             print("\t\t\t...success\n")
             time.sleep(SUBTIMEOUT)
-        except Exception:
+        except Exception as e:
             print("\t\t\t...FAIL\n")
+            print(str(e))
             time.sleep(SUBTIMEOUT)
         print("----------------------")
         testing(curr)
 
-    elif test == 12:
+    if test == 12:
         return True
-    elif test == 13:
+    if test == 13:
         return False
 
-
-
-def update_scores(event_id, curr, conn):
-    """
-    Updates the scores for a specific event. If it does not
-    exist, it adds the information into TeamScores. Or else
-    It updates the existing score to the new score.
-
-    event_id: int, The id number of the competition event.
-    curr: cursor, Allows Python code to execute sqlite code
-    conn: connection, Read-only attribute returning a reference to the connection.
-    """
-    find_team_ids = """
-    SELECT team_id, score FROM PlayerStats
-    WHERE event_id=?
-    """
-    curr.execute(find_team_ids, (event_id,))
-    team_scores = curr.fetchall()
-    for item in team_scores:
-        team_id = item[0]
-        new_score = item[1]
-        ## if team not already in team scores, insert
-        find_team_score = """
-        SELECT * FROM TeamScores
-        WHERE team_id=? AND event_id=?
-        """
-        curr.execute(find_team_score, (team_id, event_id))
-        existing = curr.fetchall()
-        if len(existing) == 0:
-            # no records exist for this team, must insert new record
-            insert = """
-            INSERT INTO TeamScores(team_id, event_id, score)
-            VALUES(?, ?, ?)
-            """
-            curr.execute(insert, (team_id, event_id, new_score))
-            conn.commit()
-
-        else:
-            ## if team already in scores, then update
-            old_score = existing[0][2]
-            update = """
-            UPDATE TeamScores
-            SET score=?
-            WHERE team_id=? AND event_id=?
-            """
-            curr.execute(update, (old_score + new_score,team_id, event_id))
-
-def run_competition(event, curr, conn):
-    """
-    Runs the competition event based on the event. It
-    utilizes all other functions.
-
-    event: list, The event information needed to run the competition [event name, number of teams]
-    curr: cursor, Allows Python code to execute sqlite code
-    conn: connection, Read-only attribute returning a reference to the connection.
-    """
-    event_name = event[0]
-    num_teams = event[1]
-    # get events for the competition
-    find_event_rounds = """
-    SELECT * FROM Events
-    WHERE event_name=?
-    """
-    curr.execute(find_event_rounds, (event_name,))
-    events_list = curr.fetchall()
-
-    user_id_min = 1
-    user_id_max = 100
-
-    ####################################round 1
-    for event in events_list[0:3]:
-        event_id = event[0]
-
-        select_players = """
-        SELECT user_id FROM Players
-        WHERE user_id >= ? AND user_id <= ?
-        """
-        curr.execute(select_players, (user_id_min, user_id_max))
-        players = curr.fetchall()
-
-        game_creation.new_game(event_id, num_teams, players, curr, conn)
-
-        user_id_min += 100
-        user_id_max += 100
-
-        update_scores(event_id, curr, conn)
-
-    utility_functions.print_table("SELECT * FROM PlayerStats", 'Player scores after 3 rounds', curr)
-
-    ################# round 2
-    for event in events_list[3:5]:
-        # grab top 200 from playerstats
-        event_id = event[0]
-        num_teams = event[4]
-
-        if event[3] == 1:  # if game_number == 1
-            top_teams = """
-            SELECT user_id, team_id FROM Teams
-            WHERE team_id IN (
-                SELECT team_id FROM TeamScores
-                WHERE event_id IN (
-                    SELECT event_id FROM Events
-                    WHERE event_name=? AND round=1
-                )
-                ORDER BY score DESC
-                LIMIT ?
-            )
-            """
-            utility_functions.print_table(top_teams, 'after round 1 -- top half of top 50', curr, args=(event_name, num_teams))
-            curr.execute(top_teams, (event_name,num_teams))
-        else:
-            top_teams = """
-            SELECT user_id, team_id FROM Teams
-            WHERE team_id IN (
-                SELECT team_id FROM TeamScores
-                WHERE event_id IN (
-                    SELECT event_id FROM Events
-                    WHERE event_name=? AND round=1
-                )
-                ORDER BY score DESC
-                LIMIT ? OFFSET ?
-            )
-            """
-            utility_functions.print_table(top_teams, 'after round 1 -- bottom half of top 200', curr, args=(event_name, num_teams, num_teams))
-            curr.execute(top_teams, (event_name,num_teams, num_teams))
-
-        players = curr.fetchall()
-
-        game_creation.new_game(event_id, num_teams, players, curr, conn)
-        update_scores(event_id, curr, conn)
-
-    ############################################# round 3
-    finalists = """
-    SELECT DISTINCT user_id, team_id FROM Teams
-    WHERE team_id IN (
-        SELECT team_id FROM TeamScores
-        WHERE event_id IN (
-            SELECT event_id FROM Events
-            WHERE event_name=? AND round = 2
-        )
-        ORDER BY score DESC LIMIT ?
-    )
-
-    """
-    utility_functions.print_table(finalists, 'Finalists, top 100 from round 2', curr, args=(event_name, num_teams))
-    curr.execute(finalists, (event_name, num_teams))
-    players = curr.fetchall()
-
-
-    find_event_info = """
-    SELECT * FROM Events WHERE event_name=? AND round=?
-    """
-    curr.execute(find_event_info, (event_name, 3))
-    final_event_info = curr.fetchall()
-    event_id = final_event_info[0][0]
-
-    game_creation.new_game(event_id, num_teams, players, curr, conn)
-    update_scores(event_id, curr, conn)
-
-    finalists = """
-    SELECT * FROM PlayerStats
-    WHERE event_id=6
-    """
-    utility_functions.print_table("SELECT * FROM PlayerStats", 'PlayerStats', curr)
-    utility_functions.print_table(finalists, 'Top 100 FINALISTS', curr)
-    utility_functions.print_table("SELECT * FROM TeamScores", "Team Scores", curr)
-
-    #utility_functions.print_table('SELECT * FROM TeamScores', 'teamScores', curr)
 
 if __name__ == "__main__":
     main()

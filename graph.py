@@ -8,7 +8,7 @@ from pathlib import Path
 TEAM_1 = [(1,1,1, 0, 32, 1111, 0, 382, 1, 1111), (1,1,1, 0, 32, 222, 0, 382, 1, 222), (1,1,1, 0, 32, 333, 0, 382, 1, 333), (1,1,1, 0, 32, 121, 0, 382, 1, 150)]
 
 CURR = utility_functions.CURR
-PATH = Path(Path.cwd()) / Path("Files")
+PATH = Path(Path.cwd()) / Path("Files") / Path("Outputs")
 
 def playerstats(user_id):
     """
@@ -73,20 +73,11 @@ def teamstats(team_id):
                 record = list(rec)[3:]
                 iD = "Team_" + str(rec[2]) + ":Player_" + str(rec[0])
                 dict_list.append(my_dict(stats[playerNum], record, iD))
-                print("Records" + str(records))
-                print("record: " + str(record))
-                print("stats: " + str(stats))
-                print("stats[{}]: ".format(playerNum) + str(stats[playerNum]))
-                print("iD: " + str(iD))
             stacked(title.format(team_id), dict_list)
 
         else:
             values = list(records[0][3:])
             iD = "Team_" + str(records[0][2]) + ":Player_1"
-            print("values: " + str(values))
-            print("records: " + str(records))
-            print("stats: " + str(stats))
-            print("iD: " + str(iD))
             dict_list.append(my_dict(stats[0], values, iD))
             stacked(title.format(team_id), dict_list)
 

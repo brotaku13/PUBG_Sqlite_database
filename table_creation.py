@@ -2,6 +2,10 @@ import sqlite3 as sql
 import csv
 from pathlib import Path
 import utility_functions
+FOLDER = Path(Path.cwd()) / Path("Files")
+PLAYER_DATA = FOLDER / Path("player_data.csv")
+PUBG_DB = FOLDER / Path("pubg_game_db.sqlite3")
+TEAM_NAMES = FOLDER / Path("team_names.csv")
 
 def drop_table(table_name, conn, curr):
     """
@@ -17,7 +21,7 @@ def drop_table(table_name, conn, curr):
     conn.commit()
 
 def create_awards(conn, curr):
-    
+
     drop_table('Awards', conn, curr)
     cmd = """
     CREATE TABLE Awards(
@@ -32,7 +36,6 @@ def create_awards(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
-    return curr.fetchall()
 
 def create_events(conn, curr):
     """
@@ -53,7 +56,6 @@ def create_events(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
-    return curr.fetchall()
 
 def create_teams(conn, curr):
     """
@@ -75,7 +77,6 @@ def create_teams(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
-    return curr.fetchall()
 
 def create_players(conn, curr):
     """
@@ -99,7 +100,6 @@ def create_players(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
-    return curr.fetchall()
 
 def create_playerstats(conn, curr):
     """
@@ -129,14 +129,13 @@ def create_playerstats(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
-    return curr.fetchall()
 
 def create_team_scores(conn, curr):
     drop_table('TeamScores', conn, curr)
     cmd = """
     CREATE TABLE TeamScores(
         team_id INTEGER,
-        event_id INTEGER, 
+        event_id INTEGER,
         score INTEGER,
         PRIMARY KEY(team_id, event_id),
         FOREIGN KEY(event_id) REFERENCES Events(event_id),
@@ -145,11 +144,10 @@ def create_team_scores(conn, curr):
     """
     curr.execute(cmd)
     conn.commit()
-    return curr.fetchall()
 
 def add_players(conn, curr):
     """
-    adds players from the players.csv into the Players table
+    adds players from the PLAYERS into the Players table
     :param: conn [sqlite3.connection] -- connection to the db
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
@@ -158,10 +156,9 @@ def add_players(conn, curr):
     INSERT INTO Players(username, first_name, last_name, phone, address, gender, age)
     VALUES (?, ?, ?, ?, ?, ?, ?);
     """
-    PLAYERCSV = "player_data.csv"
     fieldNames = ["username", "first_name", "last_name", "phone", "address", "gender", "age"]
 
-    with open(PLAYERCSV, 'r') as f:
+    with open(PLAYER_DATA, 'r') as f:
         #Reads from the CSV file the random generation of players
         reader = csv.DictReader(f)
         data = list(reader)
@@ -171,7 +168,6 @@ def add_players(conn, curr):
                 l.append(my_dict[fields])
             curr.execute(cmd, tuple(l))
             conn.commit()
-    return curr.fetchall()
 
 def add_events(events, conn, curr):
     """
@@ -191,7 +187,6 @@ def add_events(events, conn, curr):
                 """
                 curr.execute(add_event, (event_name, game_round, game_num + 1, num_teams))
                 conn.commit()
-    return curr.fetchall()
 
 def add_awards(events, awards, conn, curr):
     for i in range(len(events)):
@@ -204,7 +199,6 @@ def add_awards(events, awards, conn, curr):
             """
             curr.execute(insert, (6, place, description, 0))
             conn.commit()
-    return curr.fetchall()
 
 def create_tables(events, awards, conn, curr):
     """
@@ -222,35 +216,19 @@ def create_tables(events, awards, conn, curr):
     add_players(conn, curr)
     add_events(events, conn, curr)
     add_awards(events, awards, conn, curr)
-    utility_functions.print_all(curr)
+    utility_functions.print_all()
 
-def is_redundant(curr):
-    try:
-        rowsCSV = 0
-        with open(PLAYER_DATA, 'r') as f:
-            #Reads from the CSV file the random generation of players
-            reader = csv.DictReader(f)
-            data = list(reader)
-            rowsCSV = len(data)
-        records = utility_functions.list_players()
-        rowsSQL = len(records)
-
-        return rowsSQL == rowsCSV
-    except Exception:
+def isredundant(curr):
+    if not PUBG_DB.exists():
         return False
-
-def is_event_redundant(curr, events):
     try:
-        if len(utility_functions.display_player_by_name()) == 0:
-            return False
-        if len(utility_functions.list_players()) == 0:
-            return False
-        if len(utility_functions.male_players()) == 0:
-            return False
-        if len(utility_functions.female_players()) == 0:
-            return False
-        if len(utility_functions.list_events()) == 0:
-            return False
+        tables = ['Players', 'Events', 'Teams', 'Awards', 'PlayerStats', 'TeamScores']
+        for table in tables:
+            cmd = """
+            SELECT * FROM {}
+            """.format(table)
+            if len(curr.execute(cmd).fetchall()) == 0:
+                return False
     except Exception:
         return False
     return True

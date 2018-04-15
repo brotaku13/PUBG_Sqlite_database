@@ -2,67 +2,85 @@ import sqlite3 as sql
 import table_creation
 from pathlib import Path
 
-def display_player_by_name(curr):
+def connect():
+    """
+    Provides a CONNection to the sqlite3 database
+    :param: db_name [str] -- name of the sqlite3 database to CONNect to
+    """
+    path = Path(Path.cwd()) / Path("Files") / "pubg_game_db.sqlite3"
+    conn = sql.connect(str(path))
+    curr = conn.cursor()
+    return conn, curr
+
+CONN, CURR = connect()
+
+def display_playerstats(*curr):
+    cmd = """
+    SELECT * FROM PlayerStats
+    """
+    return print_table(cmd, 'Display Player Stats')
+
+def display_player_by_name(*curr):
     """
     Displays players by name
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
     SELECT first_name, last_name FROM Players
     """
-    return print_table(cmd, 'Display user by name', curr)
+    return print_table(cmd, 'Display user by name')
 
 
-def list_players(curr):
+def list_players(*curr):
     """
     Displays all players
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
     SELECT * FROM Players
     """
-    return print_table(cmd, 'Display all Players', curr)
+    return print_table(cmd, 'Display all Players')
 
 
-def male_players(curr):
+def male_players(*curr):
     """
     Displays all male players
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
     SELECT * FROM Players
     WHERE gender='Male'
     """
-    return print_table(cmd, 'Display all Male Players', curr)
+    return print_table(cmd, 'Display all Male Players')
 
 
-def female_players(curr):
+def female_players(*curr):
     """
     Displays all female players
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
     SELECT * FROM Players
     WHERE gender='Female'
     """
-    return print_table(cmd, 'Display all female Players', curr)
+    return print_table(cmd, 'Display all female Players')
 
 
-def list_events(curr):
+def list_events(*curr):
     """
     Displays all events
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
     SELECT round, event_id, game_number FROM Events
     """
-    return print_table(cmd, 'Display all Events', curr)
+    return print_table(cmd, 'Display all Events')
 
 
-def players_by_event(curr):
+def players_by_event(*curr):
     """
     Displays all players by event
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     records = list()
 
@@ -72,7 +90,7 @@ def players_by_event(curr):
     JOIN Events ON Teams.event_id = Events.event_id
     WHERE Events.round = 1;
     """
-    records.append(print_table(cmd, 'Players by Event:Round 1', curr))
+    records.append(print_table(cmd, 'Players by Event:Round 1'))
 
     cmd = """
     SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_id, Events.round
@@ -80,7 +98,7 @@ def players_by_event(curr):
     JOIN Events ON Teams.event_id = Events.event_id
     WHERE Events.round = 2;
     """
-    records.append(print_table(cmd, 'Players by Event: Round 2', curr))
+    records.append(print_table(cmd, 'Players by Event: Round 2'))
 
     cmd = """
     SELECT DISTINCT Players.user_id, Players.first_name, Players.last_name, Events.event_id, Events.round
@@ -88,29 +106,29 @@ def players_by_event(curr):
     JOIN Events ON Teams.event_id = Events.event_id
     WHERE Events.round = 3;
     """
-    records.append(print_table(cmd, 'Players by Event: Round 3', curr))
+    records.append(print_table(cmd, 'Players by Event: Round 3'))
 
     return tuple(records)
 
-def winners_by_event(curr):   ##### TODO #####
+def winners_by_event(*curr):   ##### TODO #####
     """
     Displays all winners of each event (uses award table)
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
     SELECT Awards.event_id, Awards.place, Awards.description, TeamScores.team_id, TeamScores.score
     FROM TeamScores JOIN Events ON TeamScores.event_id = Events.event_id
     JOIN Awards ON Awards.event_id = Events.event_id
     """
-    return print_table(cmd, 'Winners by event', curr)
+    return print_table(cmd, 'Winners by event')
 
-def lookup_id(name: str, event: str, age: int, curr):    ##### TODO ######
+def lookup_id(name: str, event: str, age: int, *curr):    ##### TODO ######
     """
     Looks up id by name, event, and age
     :param: name [str] -- first and last name of Player to look up
     :param: event [str] -- event the player participated in
     :param: age [int] -- age of player
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     first_name = name.split()[0]
     last_name = name.split()[1]
@@ -121,26 +139,26 @@ def lookup_id(name: str, event: str, age: int, curr):    ##### TODO ######
         SELECT event_id FROM Events
         )
     """
-    return print_table(cmd, 'Display all Events', curr, args=(first_name, last_name, age, event))
+    return print_table(cmd, 'Display all Events', args=(first_name, last_name, age, event))
 
-def delete_player_by_id(conn, curr):
+def delete_player_by_id(*curr):
     """
     removes a player from the player table.
-    :param: conn [sqlite3.connection] -- connection to the db
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CONN [sqlite3.CONNection] -- CONNection to the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     user_id = int(input('Enter the user id: '))
     cmd = """
     DELETE FROM Players WHERE user_id=?
     """
-    curr.execute(cmd, (user_id,))
-    conn.commit()
+    CURR.execute(cmd, (user_id,))
+    CONN.commit()
 
-def update_player_by_id(conn, curr):
+def update_player_by_id(*curr):
     """
     Updates player information
-    :param: conn [sqlite3.connection] -- connection to the db
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CONN [sqlite3.CONNection] -- CONNection to the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     user_id = int(input('Enter user id: '))
     while True:
@@ -178,43 +196,39 @@ def update_player_by_id(conn, curr):
                 SET {}
                 WHERE user_id=?
                 """.format(attribute_change)
-                curr.execute(cmd, (user_id,))
-                conn.commit()
+                CURR.execute(cmd, (user_id,))
+                CONN.commit()
         except Exception as e:
             print('Please enter a valid number')
 
-def run_all(curr, conn):
+def run_all(*curr):
     """
     Runs all necessary functions. mostly used for utility and testing
-    :param: conn [sqlite3.connection] -- connection to the db
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CONN [sqlite3.CONNection] -- CONNection to the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
-    display_player_by_name(curr)
-    list_players(curr)
-    male_players(curr)
-    female_players(curr)
-    list_events(curr)
+    return display_player_by_name(), list_players(), male_players(), female_players(), list_events()
 
-def print_table(cmd, table_name, curr, args=()):
+def print_table(cmd, table_name, *curr, args=()):
     """
     Prints a table in a readable format
     :param: cmd [str] -- an sqlite3 command
     :param: table_name [str] -- Title to display before the table is printed
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     :param: args [tuple] -- any optional arguments to be passed to the cmd string
     """
 
     # find table
     if args == ():
-        curr.execute(cmd)
+        CURR.execute(cmd)
     else:
-        curr.execute(cmd, args)
-    results = curr.fetchall()
+        CURR.execute(cmd, args)
+    results = CURR.fetchall()
     print('{} -- {} items'.format(table_name, len(results)))
 
     # get column names
     column_names = []
-    for record in curr.description:
+    for record in CURR.description:
         column_names.append(record[0])
 
     max_column_width = 0
@@ -256,29 +270,19 @@ def print_headers(column_names, max_column_width):
         print('+{}'.format('=' * max_column_width), end='')
     print('+')
 
-def print_all(curr):
+def print_all(*curr):
     """
     prints all tables in db
-    :param: curr [sqlite3.cursor] -- cursor in the db
+    :param: CURR [sqlite3.cursor] -- cursor in the db
     """
     tables = """
     SELECT name FROM sqlite_master WHERE type = "table"
     """
-    curr.execute(tables)
+    CURR.execute(tables)
 
-    for table in curr.fetchall():
+    for table in CURR.fetchall():
         if table[0] != 'Players':
             cmd = """
             SELECT * FROM {}
             """.format(table[0])
-            print_table(cmd, table[0], curr)
-
-def connect(db_name):
-    """
-    Provides a connection to the sqlite3 database
-    :param: db_name [str] -- name of the sqlite3 database to connect to
-    """
-    data_dir = Path.cwd() / Path('Files') / '{}'.format(db_name)
-    conn = sql.connect(str(data_dir))
-    curr = conn.cursor()
-    return conn, curr
+            print_table(cmd, table[0])

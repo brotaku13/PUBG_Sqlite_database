@@ -1,3 +1,5 @@
+import sqlite3 as sq
+from pathlib import Path
 import random
 import table_creation
 import utility_functions
@@ -28,7 +30,7 @@ class Player:
 
         Player.num_players += 1
         Player.alive_players.append(self)
-    
+
     def __travel(self):
         """
         Moves player some random distance between one and Player.max_distance
@@ -37,7 +39,7 @@ class Player:
         self.distance += d
         self.score += d
         #print('User {} traveled {}m'.format(self.user_id, d))
-    
+
     def __kill(self):
         """
         Increments kills and removes a player from the Player.alive_players list. Some small chance to land a headshot
@@ -60,12 +62,12 @@ class Player:
         Player.alive_players.pop(Player.alive_players.index(killed))
 
         # print('User {} killed user {}. Headshot: {}, Damage: {}, Total kills: {}'.format(
-        #     self.user_id, 
+        #     self.user_id,
         #     killed.user_id,
         #     headshot,
         #     d,
         #     self.kills))
-    
+
     def __shoot(self):
         """
         The Player shoots. they have some small chance to kill defined by Player.probability_kill, otherwise, they just do damage
@@ -99,7 +101,7 @@ class Game:
     minimum_turn_len = 30
     maximum_turn_len = 100
     team_id = 1
-    
+
     def __init__(self, num_teams, event_id, players, connection, cursor):
         self._num_teams = num_teams
         self._players_per_team = 100 / self._num_teams
@@ -115,43 +117,50 @@ class Game:
         Forms teams based on the number of teams and the Player table in the db
         :param: player_records [list] -- list of 1-tuples holding the player-ids
         """
-        if Game.team_id > self._num_teams * 3:
-            for player in player_records:
-                # all three games in round one have taken place, need to find team ID from team table
-                user_id = player[0]
-                cteam_id = player[1]
+        try:
+            if Game.team_id > self._num_teams * 3:
+                for player in player_records:
+                    # all three games in round one have taken place, need to find team ID from team table
+                    user_id = player[0]
+                    cteam_id = player[1]
 
-                insert = """
-                INSERT INTO Teams(team_id, user_id, event_id)
-                VALUES(?, ?, ?)
-                """
-                try:
-                    self._curr.execute(insert, (cteam_id, user_id, self._event_id))
-                except Exception as e:
-                    print(e)
-                self._conn.commit()
-
-                if cteam_id in self._teams:
-                    self._teams[cteam_id].append(Player(user_id))
-                else:
-                    self._teams[cteam_id] = [Player(user_id)]
-        else:
-            jump = int(100 / self._num_teams)
-            for i in range(0, len(player_records), jump):
-                for j in range(jump):
-                    user_id = player_records[i + j][0]
                     insert = """
                     INSERT INTO Teams(team_id, user_id, event_id)
                     VALUES(?, ?, ?)
                     """
-                    self._curr.execute(insert, (Game.team_id, user_id, self._event_id))
+                    try:
+                        self._curr.execute(insert, (cteam_id, user_id, self._event_id))
+                    except Exception as e:
+                        print(e)
                     self._conn.commit()
-                    if Game.team_id in self._teams:
-                        self._teams[Game.team_id].append(Player(user_id))
-                    else:
-                        self._teams[Game.team_id] = [Player(user_id)]
 
-                Game.team_id += 1
+                    if cteam_id in self._teams:
+                        self._teams[cteam_id].append(Player(user_id))
+                    else:
+                        self._teams[cteam_id] = [Player(user_id)]
+            else:
+                jump = int(100 / self._num_teams)
+                for i in range(0, len(player_records), jump):
+                    for j in range(jump):
+                        user_id = player_records[i + j][0]
+                        insert = """
+                        INSERT INTO Teams(team_id, user_id, event_id)
+                        VALUES(?, ?, ?) 
+                        """
+                        self._curr.execute(insert, (Game.team_id, user_id, self._event_id))
+                        self._conn.commit()
+                        if Game.team_id in self._teams:
+                            self._teams[Game.team_id].append(Player(user_id))
+                        else:
+                            self._teams[Game.team_id] = [Player(user_id)]
+
+                    Game.team_id += 1
+        except sq.IntegrityError as e:
+            print(str(e))
+            path = Path(Path.cwd()) / Path("Files") / Path("pubg_game_db.sqlite3")
+            if path.exists():
+                path.unlink()
+            return
 
     def reset_player_class(self):
         Player.num_players = 0
@@ -171,12 +180,12 @@ class Game:
                     if player in Player.alive_players:
                         player.take_turn()
             turns += 1
-        
+
         Player.alive_players[0].time = Player.time_elapsed   # update final player with the full elapsed time
         #self.print_game_outcome(turns)
         self.record_stats()
         self.reset_player_class()
-    
+
     def print_game_outcome(self, turns):
         """
         Convenience funtion for printing the game outcome and player stats
@@ -186,7 +195,7 @@ class Game:
             print(f'Team: {t_id}')
             for player in player_list:
                 print('\t', player)
-        
+
     def record_stats(self):
         """
         records the stats from each player object into the PlayerStats table
@@ -206,7 +215,7 @@ class Game:
         TODO
         """
         pass
-    
+
 def new_game(event_id, num_teams, players, curr, conn):
     """
     creates and initializes a new game.
