@@ -205,8 +205,9 @@ def main_code(conn, curr):
 
 def main():
     try:
+        path = Path(Path.cwd()) / Path('Files') / Path('countdown.py')
         conn, curr = utility_functions.connect()
-        sub.run(["python", "countdown.py", str(TIMEOUT)], timeout=TIMEOUT)
+        sub.run(["python", str(path), str(TIMEOUT)], timeout=TIMEOUT)
         if test.testing(curr):
             main_code(conn, curr)
     except sub.TimeoutExpired:
