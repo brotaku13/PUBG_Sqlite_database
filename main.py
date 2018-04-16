@@ -181,19 +181,15 @@ def main_code():
     # list all events and the team numbers associated with each event
     events = [('ErangelSolo', 100)]
     awards = [{'First': '$5000', 'Second': '$2500', 'Third': '$1000'}]
-    
+
     ### comment this portion to stop from recreating the whole database every single time #####
     #######    so that you can test the required functions                                ######
 
-    # table_creation.create_tables(events, awards, conn, curr)
+    table_creation.create_tables(events, awards, conn, curr)
 
-    # for event in events:
-    #     run_competition(event, curr, conn)
+    for event in events:
+        run_competition(event, curr, conn)
 
-    utility_functions.print_table('select * from PlayerStats', 'playerstats', curr)
-    ##########################################################################################
-    utility_functions.print_table('select * from TeamScores WHERE event_id = 6 order by score desc limit 10', 'Awards table', curr)
-    utility_functions.winners_by_event(curr)
     # close the connection
     conn.close()
 

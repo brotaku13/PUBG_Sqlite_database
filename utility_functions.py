@@ -12,7 +12,6 @@ def display_player_by_name(curr):
     """
     return print_table(cmd, 'Display user by name', curr)
 
-
 def list_players(curr):
     """
     Displays all players
@@ -22,7 +21,6 @@ def list_players(curr):
     SELECT * FROM Players
     """
     return print_table(cmd, 'Display all Players', curr)
-
 
 def male_players(curr):
     """
@@ -35,7 +33,6 @@ def male_players(curr):
     """
     return print_table(cmd, 'Display all Male Players', curr)
 
-
 def female_players(curr):
     """
     Displays all female players
@@ -47,7 +44,6 @@ def female_players(curr):
     """
     return print_table(cmd, 'Display all female Players', curr)
 
-
 def list_events(curr):
     """
     Displays all events
@@ -57,7 +53,6 @@ def list_events(curr):
     SELECT round, event_name, game_number FROM Events
     """
     return print_table(cmd, 'Display all Events', curr)
-
 
 def players_by_event(curr):
     """
@@ -154,7 +149,7 @@ def update_player_by_id(conn, curr):
         print('7. Quit')
         try: 
             choice = int(input('Attribute: '))
-            if choice < 1 || choice > 7:
+            if choice < 1 or choice > 7:
                 raise ValueError('Bad choice')
             else:
                 attribute_change = ''
@@ -183,6 +178,40 @@ def update_player_by_id(conn, curr):
         except Exception as e:
             print('Please enter a valid number')
         
+def player_info_by_id(curr):
+    """
+    Looks up Player information by player id: 
+    :param: curr [sqlite3.cursor] -- cursor in the db
+    """
+    user_id = int(input('Lookup info by ID. Enter Player ID: '))
+    cmd = """
+    SELECT * from Players
+    WHERE user_id=?
+    """
+    print_table(cmd, 'Player id '.format(user_id), curr)
+
+def player_stats_by_id(curr):
+    """
+    Looks up player stats by player id
+    :param: curr [sqlite3.cursor] -- cursor in the db
+    """
+    user_id = int(input('Lookup info by ID. Enter Player ID: '))
+    cmd = """
+    SELECT * FROM PlayerStats WHERE user_id=?
+    """
+    curr.execute(cmd, (user_id,))
+
+def player_awards_by_id(curr):   ##### TODO #####
+    """
+    Prints out the awards of a given player. If they did not place, instead of printing out the table, it prints the message " did not win anything..."
+    :param: curr [sqlite3.cursor] -- cursor in the db
+    """
+    user_id = int(input('Lookup info by ID. Enter Player ID: '))
+    cmd = """
+    SELECT * FROM Awards WHERE user_id=?
+    """
+
+
 def run_all(curr, conn):
     """
     Runs all necessary functions. mostly used for utility and testing
