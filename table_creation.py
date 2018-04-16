@@ -2,7 +2,10 @@ import sqlite3 as sql
 import csv
 from pathlib import Path
 import utility_functions
-
+FOLDER = Path(Path.cwd()) / Path("Files")
+PLAYER_DATA = FOLDER / Path("player_data.csv")
+PUBG_DB = FOLDER / Path("pubg_game_db.sqlite3")
+TEAM_NAMES = FOLDER / Path("team_names.csv")
 
 def drop_table(table_name, conn, curr):
     """
@@ -18,7 +21,7 @@ def drop_table(table_name, conn, curr):
     conn.commit()
 
 def create_awards(conn, curr):
-    
+
     drop_table('Awards', conn, curr)
     cmd = """
     CREATE TABLE Awards(
@@ -132,7 +135,7 @@ def create_team_scores(conn, curr):
     cmd = """
     CREATE TABLE TeamScores(
         team_id INTEGER,
-        event_id INTEGER, 
+        event_id INTEGER,
         score INTEGER,
         PRIMARY KEY(team_id, event_id),
         FOREIGN KEY(event_id) REFERENCES Events(event_id),
@@ -144,7 +147,7 @@ def create_team_scores(conn, curr):
 
 def add_players(conn, curr):
     """
-    adds players from the players.csv into the Players table
+    adds players from the PLAYERS into the Players table
     :param: conn [sqlite3.connection] -- connection to the db
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
@@ -153,10 +156,9 @@ def add_players(conn, curr):
     INSERT INTO Players(username, first_name, last_name, phone, address, gender, age)
     VALUES (?, ?, ?, ?, ?, ?, ?);
     """
-    PLAYERCSV = "player_data.csv"
     fieldNames = ["username", "first_name", "last_name", "phone", "address", "gender", "age"]
 
-    with open(PLAYERCSV, 'r') as f:
+    with open(PLAYER_DATA, 'r') as f:
         #Reads from the CSV file the random generation of players
         reader = csv.DictReader(f)
         data = list(reader)
@@ -214,4 +216,19 @@ def create_tables(events, awards, conn, curr):
     add_players(conn, curr)
     add_events(events, conn, curr)
     add_awards(events, awards, conn, curr)
-    utility_functions.print_all(curr)
+    utility_functions.print_all()
+
+def isredundant(curr):
+    if not PUBG_DB.exists():
+        return False
+    try:
+        tables = ['Players', 'Events', 'Teams', 'Awards', 'PlayerStats', 'TeamScores']
+        for table in tables:
+            cmd = """
+            SELECT * FROM {}
+            """.format(table)
+            if len(curr.execute(cmd).fetchall()) == 0:
+                return False
+    except Exception:
+        return False
+    return True
