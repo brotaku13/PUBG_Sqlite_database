@@ -1,11 +1,12 @@
 import utility_functions
 import table_creation
 import game_creation
-import create_tables
+import table_creation
 from pathlib import Path
 import time
 import sys
 import subprocess as sub
+
 
 TIMEOUT = 5
 SUBTIMEOUT = 1
@@ -42,6 +43,8 @@ def testing(curr):
     print("6. players_by_event")
     print("7. winners_by_event")
     print("8. lookup_id")
+    print("9. Teamscores")
+    print("10. Winners by Event")
     print("11. Test Everything")
     print("12. Start Program")
     print("13. Exit Everything")
@@ -94,6 +97,15 @@ def testing(curr):
             time.sleep(SUBTIMEOUT)
         print("----------------------")
         testing(curr)
+    if test == 9:
+        teamscores = """
+        Select * from TeamScores
+        """
+        utility_functions.print_table(teamscores, 'Teamscores', curr)
+    if test == 10:
+        winners = """select * from Awards"""
+        utility_functions.print_table(winners, 'Team winners', curr)
+
 
     if test == 12:
         return True

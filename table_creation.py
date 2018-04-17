@@ -216,7 +216,7 @@ def create_tables(events, awards, conn, curr):
     add_players(conn, curr)
     add_events(events, conn, curr)
     add_awards(events, awards, conn, curr)
-    utility_functions.print_all()
+    utility_functions.print_all(curr)
 
 def isredundant(curr):
     if not PUBG_DB.exists():

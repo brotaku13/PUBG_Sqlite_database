@@ -1,213 +1,240 @@
-import game_creation
+import os
+import sys
+import competition
 import utility_functions
-import table_creation
-import game_creation
-import create_tables
-import graph
 import subprocess as sub
-from pathlib import Path
 import test
 
-TIMEOUT = 3
+def clear():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
+def wait():
+    return isinstance(input('Press Enter to continue...'), str)
 
-def update_scores(event_id, curr, conn):
-    """
-    Updates the scores for a specific event. If it does not
-    exist, it adds the information into TeamScores. Or else
-    It updates the existing score to the new score.
+def display_title():
+    clear()
+    title = """
+    ██████╗ ██╗   ██╗██████╗  ██████╗                                                      
+    ██╔══██╗██║   ██║██╔══██╗██╔════╝                                                      
+    ██████╔╝██║   ██║██████╔╝██║  ███╗                                                     
+    ██╔═══╝ ██║   ██║██╔══██╗██║   ██║                                                     
+    ██║     ╚██████╔╝██████╔╝╚██████╔╝                                                     
+    ╚═╝      ╚═════╝ ╚═════╝  ╚═════╝                                                      
+                                                                                        
+    ██████╗ ██████╗ ███╗   ███╗██████╗ ███████╗████████╗██╗████████╗██╗ ██████╗ ███╗   ██╗
+    ██╔════╝██╔═══██╗████╗ ████║██╔══██╗██╔════╝╚══██╔══╝██║╚══██╔══╝██║██╔═══██╗████╗  ██║
+    ██║     ██║   ██║██╔████╔██║██████╔╝█████╗     ██║   ██║   ██║   ██║██║   ██║██╔██╗ ██║
+    ██║     ██║   ██║██║╚██╔╝██║██╔═══╝ ██╔══╝     ██║   ██║   ██║   ██║██║   ██║██║╚██╗██║
+    ╚██████╗╚██████╔╝██║ ╚═╝ ██║██║     ███████╗   ██║   ██║   ██║   ██║╚██████╔╝██║ ╚████║
+    ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚══════╝   ╚═╝   ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+                                                                                        
 
-    event_id: int, The id number of the competition event.
-    curr: cursor, Allows Python code to execute sqlite code
-    conn: connection, Read-only attribute returning a reference to the connection.
+                                                                
     """
-    find_team_ids = """
-    SELECT team_id, score FROM PlayerStats
-    WHERE event_id=?
-    """
-    curr.execute(find_team_ids, (event_id,))
-    team_scores = curr.fetchall()
-    for item in team_scores:
-        team_id = item[0]
-        new_score = item[1]
-        ## if team not already in team scores, insert
-        find_team_score = """
-        SELECT * FROM TeamScores
-        WHERE team_id=? AND event_id=?
-        """
-        curr.execute(find_team_score, (team_id, event_id))
-        existing = curr.fetchall()
-        if len(existing) == 0:
-            # no records exist for this team, must insert new record
-            insert = """
-            INSERT INTO TeamScores(team_id, event_id, score)
-            VALUES(?, ?, ?)
-            """
-            curr.execute(insert, (team_id, event_id, new_score))
-            conn.commit()
+    print(title)
+    return wait()
+    
+
+def display_top_menu():
+    clear()
+    menu = """
+    Main Menu
+
+        1. Run New Competition
+        2. Modify, or Delete Records
+        3. Display Players
+        4. Display Events
+        5. Display Winners
+        6. Look Up Player ID
+        7. Display Graphs
+        8. Exit
+
+    Select an option: """
+    print(menu, end='')
+    
+def handle_choice(conn, curr):
+    while True:
+        try:
+            choice = int(input())
+            if choice < 1 or choice > 8:
+                raise ValueError
+            else:
+                break
+        except:
+            print('The choice is not valid, choose again. ')
+    
+    if choice == 1:
+        return run_new_competition(conn, curr)
+
+    elif choice == 2:
+        return modify_record(conn, curr)
+
+    elif choice == 3:
+        return display_players(conn, curr)
+
+    elif choice == 4:
+        return display_events(conn, curr)
+
+    elif choice == 5:
+        return display_winners(conn, curr)
+
+    elif choice == 6:
+        return look_up(conn, curr)
+
+    elif choice == 7:
+        pass
+
+    else:
+        return False
+
+def run_new_competition(conn, curr):
+    clear()
+    print('Running new Competition...')
+    competition.main_code(conn, curr, 25)
+    print('Finished')
+    return wait()
+
+def display_modify_menu():
+    clear()
+    menu = """
+    Modify Record
+
+        1. Delete by player ID
+        2. Modify by Player ID
+        3. Return to Main Menu
+
+    Select an option: """
+    print(menu, end='')
+
+def modify_record(conn, curr):
+    while True:
+        display_modify_menu()
+        while True:
+            try:
+                choice = int(input())
+                if choice < 1 or choice > 3:
+                    raise ValueError
+                else:
+                    break
+            except:
+                print('The choice is not valid, choose again: ', end='')
+        
+        if choice == 1:
+            clear()
+            print('Deleting player by ID\n')
+            utility_functions.delete_player_by_id(conn, curr)
+            wait()
+
+        elif choice == 2:
+            clear()
+            utility_functions.update_player_by_id(conn, curr)
+            wait()
+        else:
+            return True
+
+def display_players_menu():
+    clear()
+    menu = """
+    Display Player Information
+
+        1. Players Alphabetically
+        2. Players by Player ID
+        3. Players by Event
+        4. Male Players
+        5. Female Players
+        6. Return to Main Menu
+
+    Select an option: """
+    print(menu, end='')
+
+def display_players(conn, curr):
+    while True:
+        display_players_menu()
+        while True:
+            try:
+                choice = int(input())
+                if choice < 1 or choice > 6:
+                    raise ValueError
+                else:
+                    break
+            except:
+                print('The choice is not valid, choose again: ', end='')
+        
+        if choice == 1:
+            clear()
+            utility_functions.display_player_by_name(curr)
+            wait()
+
+        elif choice == 2:
+            clear()
+            utility_functions.list_players(curr)
+            wait()
+
+        elif choice == 3:
+            clear()
+            utility_functions.players_by_event(curr)
+            wait()
+        
+        elif choice == 4:
+            clear()
+            utility_functions.male_players(curr)
+            wait()
+        
+        elif choice == 5:
+            clear()
+            utility_functions.female_players(curr)
+            wait()
 
         else:
-            ## if team already in scores, then update
-            old_score = existing[0][2]
-            update = """
-            UPDATE TeamScores
-            SET score=?
-            WHERE team_id=? AND event_id=?
-            """
-            curr.execute(update, (old_score + new_score,team_id, event_id))
+            return True
+        
+def display_events(conn, curr):
+    clear()
+    utility_functions.list_events(curr)
+    return wait()
 
-def run_competition(event, curr, conn):
-    """
-    Runs the competition event based on the event. It
-    utilizes all other functions.
+def display_winners(conn, curr):
+    clear()
+    print('Winners by Event\n')
+    utility_functions.winners_by_event(curr)
+    return wait()
 
-    event: list, The event information needed to run the competition [event name, number of teams]
-    curr: cursor, Allows Python code to execute sqlite code
-    conn: connection, Read-only attribute returning a reference to the connection.
-    """
-    event_name = event[0]
-    num_teams = event[1]
-    # get events for the competition
-    find_event_rounds = """
-    SELECT * FROM Events
-    WHERE event_name=?
-    """
-    curr.execute(find_event_rounds, (event_name,))
-    events_list = curr.fetchall()
-
-    user_id_min = 1
-    user_id_max = 100
-
-    ####################################round 1
-    for event in events_list[0:3]:
-        event_id = event[0]
-
-        select_players = """
-        SELECT user_id FROM Players
-        WHERE user_id >= ? AND user_id <= ?
-        """
-        curr.execute(select_players, (user_id_min, user_id_max))
-        players = curr.fetchall()
-
-        game_creation.new_game(event_id, num_teams, players, curr, conn)
-
-        user_id_min += 100
-        user_id_max += 100
-
-        update_scores(event_id, curr, conn)
-
-    utility_functions.print_table("SELECT * FROM PlayerStats", 'Player scores after 3 rounds', curr)
-
-    ################# round 2
-    for event in events_list[3:5]:
-        # grab top 200 from playerstats
-        event_id = event[0]
-        num_teams = event[4]
-
-        if event[3] == 1:  # if game_number == 1
-            top_teams = """
-            SELECT user_id, team_id FROM Teams
-            WHERE team_id IN (
-                SELECT team_id FROM TeamScores
-                WHERE event_id IN (
-                    SELECT event_id FROM Events
-                    WHERE event_name=? AND round=1
-                )
-                ORDER BY score DESC
-                LIMIT ?
-            )
-            """
-            utility_functions.print_table(top_teams, 'after round 1 -- top half of top 50', curr, args=(event_name, num_teams))
-            curr.execute(top_teams, (event_name,num_teams))
-
-        else:
-            top_teams = """
-            SELECT user_id, team_id FROM Teams
-            WHERE team_id IN (
-                SELECT team_id FROM TeamScores
-                WHERE event_id IN (
-                    SELECT event_id FROM Events
-                    WHERE event_name=? AND round=1
-                )
-                ORDER BY score DESC
-                LIMIT ? OFFSET ?
-            )
-            """
-            utility_functions.print_table(top_teams, 'after round 1 -- bottom half of top 200', curr, args=(event_name, num_teams, num_teams))
-
-            curr.execute(top_teams, (event_name,num_teams, num_teams))
-
-        players = curr.fetchall()
-
-        game_creation.new_game(event_id, num_teams, players, curr, conn)
-        update_scores(event_id, curr, conn)
-
-    ############################################# round 3
-    finalists = """
-    SELECT DISTINCT user_id, team_id FROM Teams
-    WHERE team_id IN (
-        SELECT team_id FROM TeamScores
-        WHERE event_id IN (
-            SELECT event_id FROM Events
-            WHERE event_name=? AND round = 2
-        )
-        ORDER BY score DESC LIMIT ?
-    )
-
-    """
-    utility_functions.print_table(finalists, 'Finalists, top 100 from round 2', curr, args=(event_name, num_teams))
-
-    curr.execute(finalists, (event_name, num_teams))
-    players = curr.fetchall()
-
-
-    find_event_info = """
-    SELECT * FROM Events WHERE event_name=? AND round=?
-    """
-    curr.execute(find_event_info, (event_name, 3))
-    final_event_info = curr.fetchall()
-    event_id = final_event_info[0][0]
-
-    game_creation.new_game(event_id, num_teams, players, curr, conn)
-    update_scores(event_id, curr, conn)
-
-    finalists = """
-    SELECT * FROM PlayerStats
-    WHERE event_id=6
-    """
-    utility_functions.print_table("SELECT * FROM PlayerStats", 'PlayerStats', curr)
-    utility_functions.print_table(finalists, 'Top 100 FINALISTS', curr)
-    utility_functions.print_table("SELECT * FROM TeamScores", "Team Scores", curr)
-
-    #utility_functions.print_table('SELECT * FROM TeamScores', 'teamScores', curr)
-
-def main_code(conn, curr):
-    print()
-    # get connection
-    # list all events and the team numbers associated with each event
-    events = [('ErangelSolo', 100)]
-    awards = [{'First': '$5000', 'Second': '$2500', 'Third': '$1000'}]
-    ### comment this portion to stop from recreating the whole database every single time #####
-    #######    so that you can test the required functions         ##########
-        #this function checks to see if player table is filled already.
-    if not table_creation.isredundant(curr):
-        table_creation.create_tables(events, awards, conn, curr)
-
-        for event in events:
-            run_competition(event, curr, conn)
-
-    # close the connection
-    conn.close()
+def look_up(conn, curr):
+    clear()
+    print('Look up Player by ID\n')
+    while True:
+        try:
+            name = str(input('Enter the player\'s full name: ')).title()
+            if len(name.split()) != 2:
+                print('\nPlayer name must be a first name and last name. Ex: Bob Dylan')
+                raise ValueError
+            age = int(input('Enter the player\'s age: '))
+            event_id = int(input('Enter the event ID the player participated in: '))
+            utility_functions.lookup_id(name, event_id, age, curr)
+            break
+        except ValueError:
+            print('Please enter information which is correctly formatted\n')
+            
+    return wait()
 
 def main():
-    try:
-        path = Path(Path.cwd()) / Path('Files') / Path('countdown.py')
-        conn, curr = utility_functions.connect()
-        sub.run(["python", str(path), str(TIMEOUT)], timeout=TIMEOUT)
-        if test.testing(curr):
-            main_code(conn, curr)
-    except sub.TimeoutExpired:
-        main_code(conn, curr)
+    conn, curr = utility_functions.connect()
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '-t':
+            clear()
+            test.testing(curr)
+        else:
+            print('Arguments not recognized, terminating program.')
+            return
+    else:
+        competition.main_code(conn, curr, 25)
+        display_title()
+        
+        while True:
+            display_top_menu()
+            if not handle_choice(conn, curr):
+                conn.close()
+                break
 
 if __name__ == '__main__':
     main()

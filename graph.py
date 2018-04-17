@@ -7,7 +7,7 @@ from pathlib import Path
 
 TEAM_1 = [(1,1,1, 0, 32, 1111, 0, 382, 1, 1111), (1,1,1, 0, 32, 222, 0, 382, 1, 222), (1,1,1, 0, 32, 333, 0, 382, 1, 333), (1,1,1, 0, 32, 121, 0, 382, 1, 150)]
 
-CURR = utility_functions.CURR
+CURR = utility_functions.connect()[0]
 PATH = Path(Path.cwd()) / Path("Files") / Path("Outputs")
 
 def playerstats(user_id):
@@ -25,6 +25,7 @@ def playerstats(user_id):
     SELECT * FROM PlayerStats
     WHERE PlayerStats.user_id = {}
     """
+
     if isinstance(user_id, list):
         if len(user_id) > 0:
             playerstats(user_id[1:])
