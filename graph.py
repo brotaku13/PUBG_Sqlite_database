@@ -10,7 +10,8 @@ TEAM_1 = [(1,1,1, 0, 32, 1111, 0, 382, 1, 1111), (1,1,1, 0, 32, 222, 0, 382, 1, 
 CURR = utility_functions.connect()[0]
 PATH = Path(Path.cwd()) / Path("Files") / Path("Outputs")
 
-def playerstats(user_id):
+
+def playerstats(user_id, curr):
     """
     Use this function by adding the user_id as the argument. It can be done in
     a number of ways:
@@ -23,28 +24,30 @@ def playerstats(user_id):
     title = "Player Stats for User_ID: {}"
     cmd = """
     SELECT * FROM PlayerStats
-    WHERE PlayerStats.user_id = {}
+    WHERE user_id={}
     """
-
     if isinstance(user_id, list):
         if len(user_id) > 0:
             playerstats(user_id[1:])
             playerstats(user_id[0])
     else:
         cmd = cmd.format(user_id)
-        records = CURR.execute(cmd).fetchall()
+        records = curr.execute(cmd).fetchall()
         if len(records) > 1:
-            values = [[x[i] for x in records] for i in range(len(records[0]))][3:]
+            values = [[x[i]*100 if i == 3 else x[i] for x in records] for i in range(len(records[0]))][3:]
+            values = values[:len(values)-2] + values[:len(values)-1]
             groups = [("Event ID: " + str(x)) for x in [x[1] for x in records]]
             dict_list = []
-            for i, field in enumerate(fieldnames[3:]):
+            for i, field in enumerate(fieldnames[3:8] + fieldnames[9:]):
                 dict_list.append(my_dict(groups, values[i], field))
             grouped(title.format(user_id), dict_list)
 
         else:
             basic(title.format(user_id), fieldnames[3:], list(records[0])[3:])
 
-def teamstats(team_id):
+
+
+def teamstats(team_id, conn, curr):
     """
     Use this function by adding the team_id as the argument. It can be done in
     a number of ways:
@@ -53,34 +56,55 @@ def teamstats(team_id):
     teamstats([2,3])  #or can run multiple user ids
 
     """
-    fieldnames = ['user_id', 'event_id', 'team_id', 'kills', 'damage', 'distance', 'headshots', 'time', 'death', 'score']
+    fieldnames = ['user_id', 'event_id', 'team_id', 'score']
     title = "Team Stats for Team_ID: {}"
     cmd = """
-    SELECT * FROM PlayerStats
-    WHERE PlayerStats.team_id = {}
-    """
-    if isinstance(team_id, list):
-        if len(team_id) > 0:
-            teamstats(team_id[1:])
-            teamstats(team_id[0])
-    else:
-        cmd = cmd.format(team_id)
-        records = CURR.execute(cmd).fetchall()
-        stats = [[str(field[0].upper()+field[1:] + " @ Event_" + str(x[1])) for y,
-                field in enumerate(fieldnames[3:])] for i, x in enumerate(records)]
-        dict_list = []
-        if len(records) > 1:
-            for playerNum, rec in enumerate(records):
-                record = list(rec)[3:]
-                iD = "Team_" + str(rec[2]) + ":Player_" + str(rec[0])
-                dict_list.append(my_dict(stats[playerNum], record, iD))
-            stacked(title.format(team_id), dict_list)
-
+    SELECT user_id, event_id, team_id, score FROM PlayerStats
+    WHERE team_id={}
+    """.format(team_id)
+    curr.execute(cmd)
+    teamscores = curr.fetchall()
+    player_dict = {}
+    event_set = set()
+    data = []
+    for player in teamscores:
+        user_id = player[0]
+        event_id = player[1]
+        score = player[3]
+        if user_id in player_dict:
+            player_dict[user_id][event_id] = score
         else:
-            values = list(records[0][3:])
-            iD = "Team_" + str(records[0][2]) + ":Player_1"
-            dict_list.append(my_dict(stats[0], values, iD))
-            stacked(title.format(team_id), dict_list)
+            player_dict[user_id] = {event_id: score}
+        event_set.add(event_id)
+
+    for player, score in player_dict.items():
+        scores = []
+        for event_id in event_set:
+            scores.append(player_dict[player][event_id])
+        width = 0
+        if len(event_set) == 1:
+            data.append(
+                Bar(
+                    x=['event {}'.format(str(event_id)) for event_id in list(event_set)],
+                    y=scores,
+                    name=player,
+                    width=.4
+                )
+            )
+        else:
+            data.append(
+                Bar(
+                    x=['event {}'.format(str(event_id)) for event_id in list(event_set)],
+                    y=scores,
+                    name=player
+                )
+            )
+    layout = Layout(
+        barmode='stack'
+    )
+    fig = plotly.graph_objs.Figure(data=data, layout=layout)
+    return fig
+
 
 def basic(title, fieldnames, values):
     """
@@ -93,7 +117,8 @@ def basic(title, fieldnames, values):
     )]
     layout = plotly.graph_objs.Layout(title=title)
     fig = plotly.graph_objs.Figure(data=data, layout=layout)
-    plotly.offline.plot(fig, filename=str(PATH)+'/{}.html'.format(title))
+    #plotly.offline.plot(fig, filename=str(PATH)+'/{}.html'.format(title))
+    return fig
 
 def stacked(title, dictList):
     """
@@ -112,9 +137,12 @@ def stacked(title, dictList):
             y=my_dict['values'],
             name=my_dict['barName']
         ))
-    layout = plotly.graph_objs.Layout(barmode='stack', title=title)
+    layout = plotly.graph_objs.Layout(
+        barmode='stack', 
+        title=title)
     fig = plotly.graph_objs.Figure(data=data, layout=layout)
-    plotly.offline.plot(fig, filename=str(PATH)+'/{}.html'.format(title))
+    #plotly.offline.plot(fig, filename=str(PATH)+'/{}.html'.format(title))
+    return fig
 
 def grouped(title, dictList):
     """
@@ -128,15 +156,16 @@ def grouped(title, dictList):
     """
     data = list()
     for my_dict in dictList:
-        data.append(plotly.graph_objs.Bar(
-        x=my_dict['groupName'],
-        y=my_dict['values'],
-        name=my_dict['barName']
+        data.append(Bar(
+            x=my_dict['groupName'],
+            y=my_dict['values'],
+            name=my_dict['barName']
         ))
 
     layout = plotly.graph_objs.Layout(barmode='group', title=title)
     fig = plotly.graph_objs.Figure(data=data, layout=layout)
-    plotly.offline.plot(fig, filename=str(PATH)+'/{}.html'.format(title))
+    #plotly.offline.plot(fig, filename=str(PATH)+'/{}.html'.format(title))
+    return fig
 
 def my_dict(x,y,z):
     return OrderedDict([('groupName', x), ('values', y), ('barName', z)])

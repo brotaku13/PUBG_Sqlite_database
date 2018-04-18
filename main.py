@@ -4,6 +4,8 @@ import competition
 import utility_functions
 import subprocess as sub
 import test
+from pathlib import Path
+from multiprocessing import Process
 import display_graphs
 
 def clear():
@@ -84,11 +86,10 @@ def handle_choice(conn, curr):
         return look_up(conn, curr)
 
     elif choice == 7:
-        return display_graphs.run_dash(conn, curr)
+        display_graphs.run_dash()
     
     elif choice == 8:
-        pass
-
+        return False
     else:
         return False
 
@@ -211,6 +212,8 @@ def display_players(conn, curr):
 
         else:
             return True
+
+
         
 def display_events(conn, curr):
     clear()
