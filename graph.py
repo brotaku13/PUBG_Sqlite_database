@@ -5,54 +5,22 @@ import plotly
 from plotly.graph_objs import Bar, Layout
 from pathlib import Path
 
-TEAM_1 = [(1,1,1, 0, 32, 1111, 0, 382, 1, 1111), (1,1,1, 0, 32, 222, 0, 382, 1, 222), (1,1,1, 0, 32, 333, 0, 382, 1, 333), (1,1,1, 0, 32, 121, 0, 382, 1, 150)]
-
-CURR = utility_functions.connect()[0]
-PATH = Path(Path.cwd()) / Path("Files") / Path("Outputs")
-
-
-def playerstats(user_id, curr):
+def playerstats(team_id, conn, curr, player_position):
+    find_players = """
+    SELECT user_id FROM Teams
+    WHERE team_id=?
     """
-    Use this function by adding the user_id as the argument. It can be done in
-    a number of ways:
+    curr.execute(find_players, (team_id,))
+    teammates = curr.fetchall()
 
-    playerstats(3)      #can take one user id
-    playerstats([2,3])  #or can run multiple user ids
+    user_id = teammates[player_position][0]
 
-    """
-    fieldnames = ['user_id', 'event_id', 'team_id', 'kills', 'damage', 'distance', 'headshots', 'time', 'death', 'score']
-    title = "Player Stats for User_ID: {}"
-    cmd = """
-    SELECT * FROM PlayerStats
-    WHERE user_id={}
-    """
-    if isinstance(user_id, list):
-        if len(user_id) > 0:
-            playerstats(user_id[1:])
-            playerstats(user_id[0])
-    else:
-        cmd = cmd.format(user_id)
-        records = curr.execute(cmd).fetchall()
-        if len(records) > 1:
-            values = [[x[i]*100 if i == 3 else x[i] for x in records] for i in range(len(records[0]))][3:]
-            values = values[:len(values)-2] + values[:len(values)-1]
-            groups = [("Event ID: " + str(x)) for x in [x[1] for x in records]]
-            dict_list = []
-            for i, field in enumerate(fieldnames[3:8] + fieldnames[9:]):
-                dict_list.append(my_dict(groups, values[i], field))
-            return grouped(title.format(user_id), dict_list)
-
-        else:
-            return basic(title.format(user_id), fieldnames[3:], list(records[0])[3:])
-
-def brian_playerstats(user_id, curr):
     cmd = """
     SELECT event_id, kills, headshots, damage, distance FROM Playerstats
     WHERE user_id=?
     """
     curr.execute(cmd, (user_id,))
     stats = curr.fetchall()
-
 
     player_dict = {}
     data = []
