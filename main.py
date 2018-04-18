@@ -5,8 +5,9 @@ import utility_functions
 import subprocess as sub
 import test
 from pathlib import Path
-from multiprocessing import Process
 import display_graphs
+import table_creation
+
 
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -49,9 +50,8 @@ def display_top_menu():
         4. Display Events
         5. Display Winners
         6. Look Up Player ID
-        7. Display Graphs
-        8. Display Player Stats
-        9. Exit
+        7. Display Player Stats
+        8. Display Graphs and Exit
 
     Select an option: """
     print(menu, end='')
@@ -60,7 +60,7 @@ def handle_choice(conn, curr):
     while True:
         try:
             choice = int(input())
-            if choice < 1 or choice > 8:
+            if choice < 1 or choice > 9:
                 raise ValueError
             else:
                 break
@@ -86,10 +86,11 @@ def handle_choice(conn, curr):
         return look_up(conn, curr)
 
     elif choice == 7:
-        display_graphs.run_dash()
+        return player_stats(conn, curr)
     
     elif choice == 8:
-        return False
+        display_graphs.run_dash()
+
     else:
         return False
 
@@ -102,6 +103,7 @@ def display_player_stats_menu():
         2. Player Stats by Event ID
         3. Top Scores by Event
         4. Finalists
+        5. Exit
     
     Select an Option: """
     print(menu, end='')
@@ -109,8 +111,33 @@ def display_player_stats_menu():
 def player_stats(conn, curr):
     while True:
         display_player_stats_menu()
-        
-
+        while True:
+            try:
+                choice = int(input())
+                if choice < 1 or choice > 5:
+                    raise ValueError
+                else:
+                    break
+            except:
+                print('The choice is not valid, choose again: ', end='')
+        if choice == 1:
+            clear()
+            utility_functions.player_stats_by_all(curr)
+            wait()
+        elif choice == 2:
+            clear()
+            utility_functions.player_stats_by_event_id(curr)
+            wait()
+        elif choice == 3:
+            clear()
+            utility_functions.player_stats_by_top_scores(curr)
+            wait()
+        elif choice == 4:
+            clear()
+            utility_functions.player_stats_by_finals(curr)
+            wait()
+        else:
+            return True
 
 def run_new_competition(conn, curr):
     clear()
@@ -222,7 +249,7 @@ def display_events(conn, curr):
 
 def display_winners(conn, curr):
     clear()
-    print('Winners by Event\n')
+    print('Winners\n')
     utility_functions.winners_by_event(curr)
     return wait()
 
@@ -246,6 +273,10 @@ def look_up(conn, curr):
 
 def main():
     conn, curr = utility_functions.connect()
+
+    events = [('ErangelSolo', 25)]
+    awards = [{'First': '$5000', 'Second': '$2500', 'Third': '$1000'}]
+
     if len(sys.argv) > 1:
         if sys.argv[1] == '-t':
             clear()
@@ -254,7 +285,13 @@ def main():
             print('Arguments not recognized, terminating program.')
             return
     else:
-        competition.main_code(conn, curr, 25)
+        if not table_creation.isredundant(curr):
+            table_creation.create_tables(events, awards, conn, curr)
+
+            for event in events:
+                competition.run_competition(event, conn, curr)
+                game_creation.Game.team_id = 1
+
         display_title()
         
         while True:

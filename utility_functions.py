@@ -110,17 +110,11 @@ def winners_by_event(curr):   ##### TODO #####
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
     cmd = """
-    SELECT Awards.event_id, Events.event_name, Awards.place, Awards.description, TeamScores.team_id, TeamScores.score
-    FROM TeamScores JOIN Events ON TeamScores.event_id = Events.event_id
-    JOIN Awards ON Awards.event_id = Events.event_id
-    LIMIT 3
-    """
-    cmd = """
     SELECT Awards.event_id, Awards.place, Awards.description, Awards.team_id, TeamScores.score
     FROM TeamScores JOIN Awards ON TeamScores.team_id = Awards.team_id
     WHERE TeamScores.event_id = 6
     """
-    print_table(cmd, 'Winners by event', curr)
+    print_table(cmd, 'Winners', curr)
 
 def lookup_id(name: str, event: int, age: int, curr):    ##### TODO ######
     """
@@ -143,11 +137,11 @@ def lookup_id(name: str, event: int, age: int, curr):    ##### TODO ######
 
 def delete_player_by_id(conn, curr):
     """
+    Runs all necessary functions. mostly used for utility and testing
     removes a player from the player table.
     :param: conn [sqlite3.connection] -- connection to the db
     :param: curr [sqlite3.cursor] -- cursor in the db
     """
-    user_id = 0
     while True:
         try:
             user_id = int(input('Enter the user id: '))
@@ -159,55 +153,65 @@ def delete_player_by_id(conn, curr):
     select user_id, first_name, last_name from players
     where user_id=?
     """
-    print_table(check, 'The User to be deleted', curr, args=(user_id,))
+    curr.execute(check, (user_id,))
+    records = curr.fetchall()
+    if len(records) == 0:
+        print("Invalid User.")
+    else:
+        print_table(check, 'The User to be deleted', curr, args=(user_id,))
 
-    while True:
-        try:
-            choice = str(input('Is this the correct user? y/n ')).lower()
-            if choice != 'n' and choice != 'y':
-                raise ValueError
-            else:
-                if choice == 'y':
-                    cmd = """
-                    DELETE FROM Players WHERE user_id=?
-                    """
-                    curr.execute(cmd, (user_id,))
-                    conn.commit()
-                    return
+        while True:
+            try:
+                choice = str(input('Is this the correct user? y/n ')).lower()
+                if choice != 'n' and choice != 'y':
+                    raise ValueError
                 else:
-                    print('Returning to menu')
-                    return
+                    if choice == 'y':
+                        cmd = """
+                        DELETE FROM Players WHERE user_id=?
+                        """
+                        curr.execute(cmd, (user_id,))
+                        conn.commit()
+                        return
+                    else:
+                        print('Returning to menu')
+                        return
 
-        except ValueError:
-            print('Please enter y/n')
+            except ValueError:
+                print('Please enter y/n')
 
 def get_user(curr):
     user_id = 0
     while True:
         while True:
             try:
-                user_id = int(input('Enter user id or QUIT to return to the last menu: '))
+                user_id = int(input('Enter user id: '))
                 break
-            
             except:
                 print('Please enter a correct value')
         check = """
         select user_id,username, first_name, last_name, gender, phone, age from players
         where user_id=?
         """
-        print_table(check, 'The User to be deleted', curr, args=(user_id,))
-        while True:
-            try:
-                choice = str(input('Is this the correct user? y/n')).lower()
-                if choice != 'n' and choice != 'y':
-                    raise ValueError
-                else:
-                    if choice == 'y':
-                        return user_id
-                    else:
-                        break
-            except:
-                print('Please enter y or n ')
+        curr.execute(check, (user_id,))
+        records = curr.fetchall()
+        for rec in records:
+            if rec[1] != "":
+                print_table(check, 'The User to be changed', curr, args=(user_id,))
+                while True:
+                    try:
+                        choice = str(input('Is this the correct user? y/n')).lower()
+                        if choice != 'n' and choice != 'y':
+                            raise ValueError
+                        else:
+                            if choice == 'y':
+                                return user_id
+                            else:
+                                break
+                    except:
+                        print('Please enter y or n')
+        if len(records) == 0:
+            print("Invalid entry.")
 
 def update_player_by_id(conn, curr):
     """
@@ -242,11 +246,17 @@ def update_player_by_id(conn, curr):
                 elif choice == 3:
                     attribute_change = 'last_name="{}"'.format(input('New Last Name: '))
                 elif choice == 4:
-                    attribute_change = 'phone={}'.format(int(input('New Phone (###-###-####)').replace('-', '')))
+                    num = int(input('New Phone (###-###-####)').replace('-', ''))
+                    while num < 1000000000 or num > 9999999999:
+                        num = int(input("Please input a valid number: ").replace('-', ''))
+                    attribute_change = 'phone={}'.format(num)
                 elif choice == 5:
-                    attribute_change = 'gender="{}"'.format(input('New Gender (Male / Female)').title())
+                    attribute_change = 'gender="{}"'.format(input('New Gender (Male / Female / *Anything you want*)').title())
                 elif choice == 6:
-                    attribute_change = 'age={}'.format(int(input('New Age (>18)')))
+                    age = int(input('New Age (>18)'))
+                    while age < 18:
+                        age = int(input('Please change your age to above 18: '))
+                    attribute_change = 'age={}'.format(age)
                 else:
                     break
 
@@ -267,6 +277,77 @@ def update_player_by_id(conn, curr):
             print('Please enter a valid number')
         except Exception as e:
             print(str(e))
+        
+def player_info_by_id(curr):
+    """
+    Looks up Player information by player id: 
+    :param: curr [sqlite3.cursor] -- cursor in the db
+    """
+    user_id = int(input('Lookup info by ID. Enter Player ID: '))
+    cmd = """
+    SELECT * from Players
+    WHERE user_id=?
+    """
+    print_table(cmd, 'Player id '.format(user_id), curr)
+
+def player_stats_by_id(curr):
+    """
+    Looks up player stats by player id
+    :param: curr [sqlite3.cursor] -- cursor in the db
+    """
+    user_id = int(input('Lookup info by ID. Enter Player ID: '))
+    cmd = """
+    SELECT * FROM PlayerStats WHERE user_id=?
+    """
+    curr.execute(cmd, (user_id,))
+
+def player_awards_by_id(curr):   ##### TODO #####
+    """
+    Prints out the awards of a given player. If they did not place, instead of printing out the table, it prints the message " did not win anything..."
+    :param: curr [sqlite3.cursor] -- cursor in the db
+    """
+    user_id = int(input('Lookup info by ID. Enter Player ID: '))
+    cmd = """
+    SELECT * FROM Awards WHERE user_id=?
+    """
+
+def player_stats_by_all(curr):
+    """
+    """
+    cmd = """
+    SELECT * FROM PlayerStats
+    """
+    print_table(cmd, "All Player Stats", curr)
+
+def player_stats_by_event_id(curr):
+    """
+    """
+    event = input("Which event are you looking up? ")
+    while int(event) < 1 or int(event) > 6:
+        event = input("Enter an event 1-6: ")
+    cmd = """
+    SELECT * FROM PlayerStats WHERE event_id=?
+    """
+    print_table(cmd, "Player Stats EVENT {}".format(event), curr, args=(event,))
+
+def player_stats_by_top_scores(curr):
+    """
+    """
+    event = input("Which event are you looking up? ")
+    while int(event) < 1 or int(event) > 6:
+        event = input("Enter an event 1-6: ")
+    cmd = """
+    SELECT * FROM PlayerStats WHERE event_id=? ORDER BY score DESC LIMIT 10
+    """
+    print_table(cmd, "Top 10 Player Stats EVENT {}".format(event), curr, args=(event,))
+
+def player_stats_by_finals(curr):
+    """
+    """
+    cmd = """
+    SELECT * FROM PlayerStats WHERE event_id=6 ORDER BY score DESC
+    """
+    print_table(cmd, "FINALISTS", curr)
         
 def player_info_by_id(curr):
     """

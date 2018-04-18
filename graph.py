@@ -5,6 +5,8 @@ import plotly
 from plotly.graph_objs import Bar, Layout
 from pathlib import Path
 
+COLORS = ['rgb(114,90,193)', 'rgb(128,206,215)', 'rgb(0,121,214)', 'rgb(173,10,101)']
+
 def playerstats(team_id, conn, curr, player_position):
     find_players = """
     SELECT user_id FROM Teams
@@ -34,14 +36,19 @@ def playerstats(team_id, conn, curr, player_position):
         distance = event[4]
         player_dict[event_id] = [kills * 1000, headshots * 1000, damage, distance]
     
+    color_index = 0
     for event, stats in player_dict.items():
         data.append(
             Bar(
                 x=partitions,
                 y=stats,
-                name='Event {}'.format(event)
+                name='Event {}'.format(event),
+                marker=dict(
+                    color=COLORS[color_index]
+                )
             )
         )
+        color_index += 1
 
     layout = Layout(
         barmode='group',
@@ -87,6 +94,7 @@ def teamstats(team_id, conn, curr):
             player_dict[user_id] = {event_id: score}
         event_set.add(event_id)
 
+    color_index = 0
     for player, score in player_dict.items():
         scores = []
         for event_id in event_set:
@@ -98,7 +106,10 @@ def teamstats(team_id, conn, curr):
                     x=['event {}'.format(str(event_id)) for event_id in list(event_set)],
                     y=scores,
                     name='Player ID {}'.format(player),
-                    width=.4
+                    width=.4,
+                    marker=dict(
+                        color=COLORS[color_index]
+                    )
                 )
             )
         else:
@@ -107,8 +118,13 @@ def teamstats(team_id, conn, curr):
                     x=['event {}'.format(str(event_id)) for event_id in list(event_set)],
                     y=scores,
                     name='Player ID {}'.format(player),
+                    marker=dict(
+                        color=COLORS[color_index]
+                    )
                 )
             )
+        color_index += 1
+
     layout = Layout(
         barmode='stack',
         title=title,

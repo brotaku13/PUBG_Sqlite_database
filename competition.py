@@ -95,7 +95,7 @@ def run_competition(event, conn, curr):
 
         update_scores(event_id, curr, conn)
 
-    utility_functions.print_table("SELECT * FROM PlayerStats", 'Player scores after 3 rounds', curr)
+    #utility_functions.print_table("SELECT * FROM PlayerStats", 'Player scores after 3 rounds', curr)
 
     ################# round 2
     for event in events_list[3:5]:
@@ -116,7 +116,7 @@ def run_competition(event, conn, curr):
                 LIMIT ?
             )
             """
-            utility_functions.print_table(top_teams, 'after round 1 -- top half of top 50', curr, args=(event_name, num_teams))
+           # utility_functions.print_table(top_teams, 'after round 1 -- top half of top 50', curr, args=(event_name, num_teams))
             curr.execute(top_teams, (event_name,num_teams))
 
         else:
@@ -132,7 +132,7 @@ def run_competition(event, conn, curr):
                 LIMIT ? OFFSET ?
             )
             """
-            utility_functions.print_table(top_teams, 'after round 1 -- bottom half of top 200', curr, args=(event_name, num_teams, num_teams))
+           # utility_functions.print_table(top_teams, 'after round 1 -- bottom half of top 200', curr, args=(event_name, num_teams, num_teams))
 
             curr.execute(top_teams, (event_name,num_teams, num_teams))
 
@@ -154,7 +154,7 @@ def run_competition(event, conn, curr):
     )
 
     """
-    utility_functions.print_table(finalists, 'Finalists, top 100 from round 2', curr, args=(event_name, num_teams))
+   # utility_functions.print_table(finalists, 'Finalists, top 100 from round 2', curr, args=(event_name, num_teams))
 
     curr.execute(finalists, (event_name, num_teams))
     players = curr.fetchall()
@@ -192,6 +192,7 @@ def run_competition(event, conn, curr):
         elif place == 2:
             place_text = 'Third'
         curr.execute(insert, (team[0], place_text))
+        conn.commit()
 
 
 def main_code(conn, curr, num_teams):
@@ -201,11 +202,9 @@ def main_code(conn, curr, num_teams):
 
     ### comment this portion to stop from recreating the whole database every single time #####
     #######    so that you can test the required functions         ##########
- 
-    if not table_creation.isredundant(curr):
-        table_creation.create_tables(events, awards, conn, curr)
+    table_creation.create_tables(events, awards, conn, curr)
 
-        for event in events:
-            run_competition(event, conn, curr)
-            game_creation.Game.team_id = 1
+    for event in events:
+        run_competition(event, conn, curr)
+        game_creation.Game.team_id = 1
 

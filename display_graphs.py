@@ -180,5 +180,3 @@ def run_dash():
 
 
     app.run_server(port=8066)
-
-run_dash()
