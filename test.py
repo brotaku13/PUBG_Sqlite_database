@@ -105,7 +105,8 @@ def testing(curr):
     if test == 10:
         winners = """select * from Awards"""
         utility_functions.print_table(winners, 'Team winners', curr)
-
+    if test == 15:
+        pass
 
     if test == 12:
         return True

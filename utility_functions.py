@@ -186,8 +186,9 @@ def get_user(curr):
     while True:
         while True:
             try:
-                user_id = int(input('Enter user id: '))
+                user_id = int(input('Enter user id or QUIT to return to the last menu: '))
                 break
+            
             except:
                 print('Please enter a correct value')
         check = """
@@ -203,8 +204,10 @@ def get_user(curr):
                 else:
                     if choice == 'y':
                         return user_id
+                    else:
+                        break
             except:
-                print('Please enter y or n')
+                print('Please enter y or n ')
 
 def update_player_by_id(conn, curr):
     """

@@ -195,17 +195,17 @@ def run_competition(event, conn, curr):
 
 
 def main_code(conn, curr, num_teams):
-    # get connection
     # list all events and the team numbers associated with each event
     events = [('ErangelSolo', num_teams)]
     awards = [{'First': '$5000', 'Second': '$2500', 'Third': '$1000'}]
+
     ### comment this portion to stop from recreating the whole database every single time #####
     #######    so that you can test the required functions         ##########
-        #this function checks to see if player table is filled already.
-    #if not table_creation.isredundant(curr):
-    table_creation.create_tables(events, awards, conn, curr)
+ 
+    if not table_creation.isredundant(curr):
+        table_creation.create_tables(events, awards, conn, curr)
 
-    for event in events:
-        run_competition(event, conn, curr)
-        game_creation.Game.team_id = 1
+        for event in events:
+            run_competition(event, conn, curr)
+            game_creation.Game.team_id = 1
 

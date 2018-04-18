@@ -4,6 +4,7 @@ import competition
 import utility_functions
 import subprocess as sub
 import test
+import display_graphs
 
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -47,7 +48,8 @@ def display_top_menu():
         5. Display Winners
         6. Look Up Player ID
         7. Display Graphs
-        8. Exit
+        8. Display Player Stats
+        9. Exit
 
     Select an option: """
     print(menu, end='')
@@ -82,10 +84,32 @@ def handle_choice(conn, curr):
         return look_up(conn, curr)
 
     elif choice == 7:
+        return display_graphs.run_dash(conn, curr)
+    
+    elif choice == 8:
         pass
 
     else:
         return False
+
+def display_player_stats_menu():
+    clear()
+    menu = """
+    Player Statistics
+
+        1. All Player Stats
+        2. Player Stats by Event ID
+        3. Top Scores by Event
+        4. Finalists
+    
+    Select an Option: """
+    print(menu, end='')
+
+def player_stats(conn, curr):
+    while True:
+        display_player_stats_menu()
+        
+
 
 def run_new_competition(conn, curr):
     clear()
