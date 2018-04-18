@@ -40,11 +40,53 @@ def playerstats(user_id, curr):
             dict_list = []
             for i, field in enumerate(fieldnames[3:8] + fieldnames[9:]):
                 dict_list.append(my_dict(groups, values[i], field))
-            grouped(title.format(user_id), dict_list)
+            return grouped(title.format(user_id), dict_list)
 
         else:
-            basic(title.format(user_id), fieldnames[3:], list(records[0])[3:])
+            return basic(title.format(user_id), fieldnames[3:], list(records[0])[3:])
 
+def brian_playerstats(user_id, curr):
+    cmd = """
+    SELECT event_id, kills, headshots, damage, distance FROM Playerstats
+    WHERE user_id=?
+    """
+    curr.execute(cmd, (user_id,))
+    stats = curr.fetchall()
+
+
+    player_dict = {}
+    data = []
+    partitions = ['Kills', 'Headshots', 'Damage', 'Distance']
+    title = 'Point Breakdown for Player {}'.format(user_id)
+    for event in stats:
+        event_id = event[0]
+        kills = event[1]
+        headshots = event[2]
+        damage = event[3]
+        distance = event[4]
+        player_dict[event_id] = [kills * 1000, headshots * 1000, damage, distance]
+    
+    for event, stats in player_dict.items():
+        data.append(
+            Bar(
+                x=partitions,
+                y=stats,
+                name='Event {}'.format(event)
+            )
+        )
+
+    layout = Layout(
+        barmode='group',
+        title=title,
+        yaxis=dict(
+            title='Points'
+        ),
+        xaxis=dict(
+            title='Point Breakdown'
+        )
+    )
+    fig = plotly.graph_objs.Figure(data=data, layout=layout)
+    return fig
 
 
 def teamstats(team_id, conn, curr):
@@ -56,8 +98,8 @@ def teamstats(team_id, conn, curr):
     teamstats([2,3])  #or can run multiple user ids
 
     """
-    fieldnames = ['user_id', 'event_id', 'team_id', 'score']
-    title = "Team Stats for Team_ID: {}"
+    
+    title = "Team Points Breakdown for Team {}".format(team_id)
     cmd = """
     SELECT user_id, event_id, team_id, score FROM PlayerStats
     WHERE team_id={}
@@ -87,7 +129,7 @@ def teamstats(team_id, conn, curr):
                 Bar(
                     x=['event {}'.format(str(event_id)) for event_id in list(event_set)],
                     y=scores,
-                    name=player,
+                    name='Player ID {}'.format(player),
                     width=.4
                 )
             )
@@ -96,11 +138,18 @@ def teamstats(team_id, conn, curr):
                 Bar(
                     x=['event {}'.format(str(event_id)) for event_id in list(event_set)],
                     y=scores,
-                    name=player
+                    name='Player ID {}'.format(player),
                 )
             )
     layout = Layout(
-        barmode='stack'
+        barmode='stack',
+        title=title,
+        yaxis=dict(
+            title='Points'
+        ),
+        xaxis=dict(
+            title='Events'
+        )
     )
     fig = plotly.graph_objs.Figure(data=data, layout=layout)
     return fig

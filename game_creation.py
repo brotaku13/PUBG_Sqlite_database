@@ -15,7 +15,8 @@ class Player:
     time_elapsed = 0  # in seconds
 
     #points
-    HEADSHOT = 100
+    HEADSHOT = 1000
+    KILL = 1000
 
     def __init__(self, user_id: int):
         self.user_id = user_id
@@ -53,7 +54,7 @@ class Player:
 
         d = random.randint(1, Player.player_health)
         self.damage += d
-        self.score += d
+        self.score += Player.KILL
 
         Player.num_players -= 1
         killed = random.choice(Player.alive_players)
@@ -61,12 +62,6 @@ class Player:
         killed.time = Player.time_elapsed
         Player.alive_players.pop(Player.alive_players.index(killed))
 
-        # print('User {} killed user {}. Headshot: {}, Damage: {}, Total kills: {}'.format(
-        #     self.user_id,
-        #     killed.user_id,
-        #     headshot,
-        #     d,
-        #     self.kills))
 
     def __shoot(self):
         """
@@ -77,6 +72,7 @@ class Player:
         else:
             d = random.randint(1, Player.player_health - 1)
             self.damage += d
+            self.score += d
             #print('User {} did {} damage'.format(self.user_id, d))
 
     def take_turn(self):

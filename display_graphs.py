@@ -141,7 +141,7 @@ def run_dash():
     [Input(component_id='player_id_dropdown', component_property='value')]
     )
     def update_player_output_div(input_value):
-        return graph.playerstats(input_value, curr)
+        return graph.brian_playerstats(input_value, curr)
 
     @app.callback(
     Output(component_id='team_bar', component_property='figure'),
